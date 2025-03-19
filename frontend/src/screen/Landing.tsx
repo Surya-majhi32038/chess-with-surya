@@ -8,8 +8,6 @@ const Landing = () => {
             <div className="flex  justify-center">
                 <img src={"/chessBoard.jpeg"} alt="chees board photo" className="  w-[80%] md:w-[70%] md:mt-0 mt-10" />
             </div>
-
-
             {/* right part */}
             <div className="text-white flex flex-col gap-7 ">
                 <p className="text-5xl font-bold text-center ">Play Chess Online on the #1 Site!</p>
@@ -23,7 +21,6 @@ const Landing = () => {
                     </div>
                 </div>
             </div>
-
         </div>
     )
 }

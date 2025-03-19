@@ -22,21 +22,12 @@ export const ChessBoard = ({ board,socket }: {
 
                         return <div
                             onClick={() => {
-                                const squareRepresentation = String.fromCharCode((65 + j)) + "" + (8 - i) as Square;
+                                const squareRepresentation = String.fromCharCode((97 + j)) + "" + (8 - i) as Square;
                                 // console.log(squareRepresentation)
                                 if (from == null) {
                                     setFrom(squareRepresentation);
                                 } else {
-                                  //  setTo(squareRepresentation)
-                                    // console.log(squareRepresentation)
-                                   // 
-                                    console.log(
-                                        {
-                                            from: from,
-                                            'to':squareRepresentation
-                                        }
-                                    )
-                                    // to convert the simple javascript into json file
+                                    // last frontend part 109:46 
                                     socket.send(JSON.stringify({
                                         type:MOVE,
                                         payload: {
@@ -44,6 +35,7 @@ export const ChessBoard = ({ board,socket }: {
                                             to:squareRepresentation
                                         }
                                     }))
+                                    console.log(from,squareRepresentation);
                                     setFrom(null); 
                                    // setTo(null);
                                 }
