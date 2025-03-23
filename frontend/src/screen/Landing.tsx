@@ -18,7 +18,7 @@ const Landing = () => {
                     }}>
                         <p className="font-bold bg-transparent text-3xl">Play Online</p>
                         <p className="bg-transparent ">Play with someone at your level</p>
-                    </div>
+                    </div> 
                 </div>
             </div>
         </div>

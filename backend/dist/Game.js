@@ -48,6 +48,7 @@ class Game {
             return;
         }
         try {
+            console.log(move);
             this.board.move(move);
         }
         catch (e) {

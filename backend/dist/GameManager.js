@@ -19,12 +19,12 @@ class GameManager {
     addHandler(socket) {
         socket.on("message", (data) => {
             const message = JSON.parse(data.toString());
-            console.log("sss555s", message.type);
+            //  console.log("sss555s", message.type)
             if (message.type === message_1.INIT_GAME) {
-                console.log("inside the init game ", message.type);
+                //  console.log("inside the init game ", message.type)
                 if (this.pendingUsers) {
                     // start a game
-                    console.log("to create a new game ");
+                    // console.log("to create a new game ")
                     const game = new Game_1.Game(this.pendingUsers, socket);
                     this.games.push(game);
                     this.pendingUsers = null;
@@ -33,26 +33,14 @@ class GameManager {
                     this.pendingUsers = socket;
                 }
             }
-            /**
-             "type" : "move",
-             "move":{
-                "from":"a2",
-                "to":"a3"
-             }
-             {
-    "type" : "move",
-    "move":{
-        "from":"a2",
-        "to":"a3"
-    }
-}
-             */
             if (message.type === message_1.MOVE) {
-                console.log(" aa ");
-                console.log("inside the move");
+                // console.log(" aa ")
+                // console.log("inside the move")
                 const game = this.games.find(game => game.player1 === socket || game.player2 === socket);
+                console.log(game === null || game === void 0 ? void 0 : game.startTime);
                 if (game) {
-                    game.makeMove(socket, message.move);
+                    //console.log("in side thte message ->",message.payload)
+                    game.makeMove(socket, message.payload);
                 }
             }
         });

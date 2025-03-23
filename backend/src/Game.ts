@@ -9,7 +9,7 @@ export class Game {
     private moveCount : number;
 
     //    private move : String[];
-    private startTime: Date;
+    public  startTime: Date;
 
 
     constructor(player1: WebSocket, player2: WebSocket) {
@@ -62,6 +62,7 @@ export class Game {
         }
         
         try {
+            console.log(move)
             this.board.move(move);
         } catch (e) {
             console.log("inside the try catch block",e)

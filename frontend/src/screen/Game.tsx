@@ -17,11 +17,12 @@ const Game = () => {
             return;
         }
         socket.onmessage = (e) => {
+          //  console.log("chess -> ",chess,"board -> ",board,"sockets ->",e.data) 
             const message = JSON.parse(e.data);
             // console.log(message);
             switch (message.type) {
                 case INIT_GAME:
-                    setChess(new Chess());
+                //    setChess(new Chess());
                     setBoard(chess.board());
                     console.log("Game initialized");
                     break;
@@ -44,7 +45,7 @@ const Game = () => {
             <div className="pt-8 max-w-screen-lg w-full">
                 <div className="grid grid-cols-6 gap-4 w-full ">
                     <div className="col-span-4 bg-red-200 w-full">
-                        <ChessBoard board={board} socket={socket} />
+                        <ChessBoard chess={chess} setBoard={setBoard} board={board} socket={socket} />
                     </div>
                     <div className="col-span-2 flex items-center justify-center bg-green-200 w-full">
                         <Button
