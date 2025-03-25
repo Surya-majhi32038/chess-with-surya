@@ -17,9 +17,11 @@ class GameManager {
         this.users = this.users.filter(user => user !== socket);
     }
     addHandler(socket) {
+        console.log("we are in addHandler ");
         socket.on("message", (data) => {
             const message = JSON.parse(data.toString());
             //  console.log("sss555s", message.type)
+            console.log("addHandler and in socket.on(message)" + message.type);
             if (message.type === message_1.INIT_GAME) {
                 //  console.log("inside the init game ", message.type)
                 if (this.pendingUsers) {

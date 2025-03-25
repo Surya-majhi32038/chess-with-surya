@@ -28,8 +28,8 @@ export const ChessBoard = ({
         //    console.log(i)
         return (
           <div key={i} className="flex">
-            {row.map((squre, j) => {
-              console.log("i=", i, " j=", j);
+            {row.map((square, j) => {
+           //   console.log("i=", i, " j=", j);
               return (
                 <div
                   onClick={() => {
@@ -66,19 +66,30 @@ export const ChessBoard = ({
                     (i + j) % 2 == 0 ? "bg-[#769656]" : "bg-[#EEEED2]"
                   } relative`}
                 >
+                  {/* this part is for number and alphabat */}
                   {j == 0 ? (
+                    <>
                     <p
                       className={`absolute ${
                         (i + j) % 2 == 0 ? "text-[#EEEED2]" : "text-[#769656]"
-                      } ${
-                        j == 0
-                          ? "top-0 left-1"
-                          : `${i == 7 ? "bottom-0 right-0" : null}`
-                      }  bg-transparent`}
+                      } top-0 left-1 bg-transparent font-bold`}
                     >
                       {i + 1}
                     </p>
-                  ) : i == 7 ? (
+                    {i == 7 && (
+                      <p
+                        className={`absolute ${
+                          (i + j) % 2 == 0 ? "text-[#EEEED2]" : "text-[#769656]"
+                        } bottom-0 right-0 bg-transparent font-bold`}
+                      >
+                        a
+                      </p>
+                    )}
+                  </>
+                    // how to add here a character 'a' when i == 7 and 'a' is bottom-0 and right-0 
+                  ) : 
+                   
+                  i == 7 ? (
                     <p
                       className={`absolute ${
                         (i + j) % 2 == 0 ? "text-[#EEEED2]" : "text-[#769656]"
@@ -86,24 +97,26 @@ export const ChessBoard = ({
                         j == 0
                           ? "top-0 left-1"
                           : `${i == 7 ? "bottom-0 right-0" : null}`
-                      }  bg-transparent`}
+                      }  bg-transparent font-bold`}
                     >
                       {String.fromCharCode(97 + j)}
                     </p>
                   ) : null}
-                  {squre ? (
+
+                  {/* this part is for chess pik */}
+                  {square ? (
                     <img
                       className={`w-full ${
-                        squre?.type === "p"
+                        square?.type === "p"
                           ? `py-3 px-4`
                           : `${
-                              squre?.type === "k" ? `py-2 px-1 ` : `py-2 px-3`
+                              square?.type === "k" ? `py-2 px-1 ` : `py-2 px-3`
                             }`
                       } h-full bg-transparent `}
                       src={`/${
-                        squre?.color === "b"
-                          ? squre?.type
-                          : `${squre?.type?.toUpperCase()} copy`
+                        square?.color === "b"
+                          ? square?.type
+                          : `${square?.type?.toUpperCase()} copy`
                       }.png`}
                       alt=""
                     />

@@ -21,9 +21,13 @@ export class GameManager {
     }
 
     private addHandler(socket: WebSocket) {
+        console.log("we are in addHandler ")
+
+
         socket.on("message", (data) => {
             const message = JSON.parse(data.toString());
           //  console.log("sss555s", message.type)
+          console.log("addHandler and in socket.on(message)"+message.type)
             if (message.type === INIT_GAME) {
               //  console.log("inside the init game ", message.type)
                 if (this.pendingUsers) {

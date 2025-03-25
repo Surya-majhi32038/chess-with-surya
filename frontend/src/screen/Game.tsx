@@ -8,14 +8,19 @@ export const INIT_GAME = "init_game";
 export const MOVE = "move";
 export const GAME_OVER = "game_over";
 const Game = () => {
-    const socket = useSockts();
-    const [chess, setChess] = useState(new Chess());
-    const [board, setBoard] = useState(chess.board());
+        const socket = useSockts();
+        const [chess, setChess] = useState(new Chess());
+        const [board, setBoard] = useState(chess.board());
+    const [started, setStarted] = useState(false)
+    const [waiting, setWaiting] = useState(false)
+    // console.log('below we have print the -> "new Chess()" ')
+    // console.log( Chess)
 
     useEffect(() => {
         if (!socket) {
             return;
         }
+        console.log()
         socket.onmessage = (e) => {
           //  console.log("chess -> ",chess,"board -> ",board,"sockets ->",e.data) 
             const message = JSON.parse(e.data);
@@ -24,6 +29,7 @@ const Game = () => {
                 case INIT_GAME:
                 //    setChess(new Chess());
                     setBoard(chess.board());
+                    setStarted(true);
                     console.log("Game initialized");
                     break;
                 case MOVE:
@@ -48,17 +54,22 @@ const Game = () => {
                         <ChessBoard chess={chess} setBoard={setBoard} board={board} socket={socket} />
                     </div>
                     <div className="col-span-2 flex items-center justify-center bg-green-200 w-full">
-                        <Button
+                        {!started && waiting ? <Button >
+                            waiting, find opponent
+                        </Button> : <Button
                             onClick={() => {
-                                socket.send(
+                                setWaiting(!waiting)
+                                console.log("started state :",started," waiting state : ",waiting)
+                                socket.send( // this send message recived in backend part -> GameManager.ts -> addHandler -> INIT_GAME 
                                     JSON.stringify({
                                         type: INIT_GAME, // The function JSON.stringify() converts a JavaScript object or value into a JSON-formatted string.
                                     })
                                 );
                             }}
                         >
-                            Play
+                            Play    
                         </Button>
+                        }
                     </div>
                 </div>
             </div>

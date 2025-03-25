@@ -6,8 +6,8 @@ const wss = new ws_1.WebSocketServer({ port: 8080 });
 // console.log(wss)
 const gameManager = new GameManager_1.GameManager();
 wss.on("connection", function connection(ws) {
-    // console.log("print the value of ws in the connection ",ws)
+    // console.log("print the value of ws in the connection ",)
     gameManager.addUser(ws);
-    console.log("connected and call add user with ws value : ");
+    console.log("we are in backend  ");
     wss.on("close", () => gameManager.removeUser(ws));
 });
