@@ -78,7 +78,7 @@ export class Game {
                 }
             }))
             return;
-        }
+        } 
         
         if (this.moveCount % 2 === 0) {
             this.player2.send(JSON.stringify({

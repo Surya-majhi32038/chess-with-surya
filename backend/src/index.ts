@@ -1,12 +1,66 @@
-import { WebSocketServer } from "ws";
-import { GameManager } from "./GameManager";
+const express = require("express");
+import http from "http";
+import { Server, Socket } from "socket.io";
+import { Chess } from "chess.js";
+import path from "path";
 
-const wss = new WebSocketServer({ port: 8080 });
-// console.log(wss)
-const gameManager = new GameManager();
-wss.on("connection", function connection(ws) { // the connection work or called when click the "Play online "
-    // console.log("print the value of ws in the connection ",)
-    gameManager.addUser(ws);
-    console.log("we are in backend  ");
-    wss.on("close", () => gameManager.removeUser(ws));
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+const chess = new Chess();
+
+interface Players {
+    white?: string;
+    black?: string;
+}
+
+let players: Players = {};
+let currentPlayers: "w" | "b" = "w";
+
+io.on("connection", (socket: Socket) => {
+    console.log("Connected socket:", socket.id);
+
+    if (!players.white) {
+        players.white = socket.id;
+        socket.emit("playersRole", "w");
+    } else if (!players.black) {
+        players.black = socket.id;
+        socket.emit("playersRole", "b");
+    } else {
+        socket.emit("spectatorRole", "spectator");
+    }
+
+    socket.on("disconnect", () => {
+        if (socket.id === players.white) {
+            delete players.white;
+        } else if (socket.id === players.black) {
+            delete players.black;
+        }
+    });
+
+    socket.on("move", (move: any) => {
+        try {
+            if ((chess.turn() === "w" && socket.id !== players.white) ||
+                (chess.turn() === "b" && socket.id !== players.black)) {
+                return;
+            }
+            
+            const result = chess.move(move);
+            if (result) {
+                currentPlayers = chess.turn();
+                io.emit("move", move); // Broadcast move event
+                io.emit("boardState", chess.fen());
+            } else {
+                console.log("Invalid move:", move);
+                socket.emit("InvalidMove", move);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
+});
+
+server.listen(3000, () => {
+    console.log("Listening on port 3000");
 });

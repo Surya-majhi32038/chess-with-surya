@@ -52,14 +52,13 @@ const Game = () => {
                 <div className="grid grid-cols-6 gap-4 w-full ">
                     <div className="col-span-4 bg-red-200 w-full">
                         <ChessBoard chess={chess} setBoard={setBoard} board={board} socket={socket} />
+                        
                     </div>
                     <div className="col-span-2 flex items-center justify-center bg-green-200 w-full">
-                        {!started && waiting ? <Button >
-                            waiting, find opponent
-                        </Button> : <Button
+                         <Button
                             onClick={() => {
                                 setWaiting(!waiting)
-                                console.log("started state :",started," waiting state : ",waiting)
+                               // console.log("started state :",started," waiting state : ",waiting)
                                 socket.send( // this send message recived in backend part -> GameManager.ts -> addHandler -> INIT_GAME 
                                     JSON.stringify({
                                         type: INIT_GAME, // The function JSON.stringify() converts a JavaScript object or value into a JSON-formatted string.
@@ -69,7 +68,7 @@ const Game = () => {
                         >
                             Play    
                         </Button>
-                        }
+                        
                     </div>
                 </div>
             </div>
