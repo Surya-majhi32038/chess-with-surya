@@ -1,15 +1,16 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
-const http_1 = __importDefault(require("http"));
+const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const chess_js_1 = require("chess.js");
 const app = express();
-const server = http_1.default.createServer(app);
-const io = new socket_io_1.Server(server);
+const server = (0, http_1.createServer)(app);
+const io = new socket_io_1.Server(server, {
+    cors: {
+        origin: "*",
+    },
+});
 const chess = new chess_js_1.Chess();
 let players = {};
 let currentPlayers = "w";

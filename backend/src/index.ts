@@ -1,23 +1,26 @@
 const express = require("express");
-import http from "http";
+import {createServer} from "http";
 import { Server, Socket } from "socket.io";
 import { Chess } from "chess.js";
 import path from "path";
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const server = createServer(app);
+const io = new Server(server,{
+    cors: {
+        origin: "*",
+    },
+});
 
 const chess = new Chess();
 
 interface Players {
     white?: string;
-    black?: string;
+    black?: string; 
 }
 
 let players: Players = {};
 let currentPlayers: "w" | "b" = "w";
-
 io.on("connection", (socket: Socket) => {
     console.log("Connected socket:", socket.id);
 
