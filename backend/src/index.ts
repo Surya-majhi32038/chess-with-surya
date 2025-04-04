@@ -3,14 +3,14 @@ import {createServer} from "http";
 import { Server, Socket } from "socket.io";
 import { Chess } from "chess.js";
 import path from "path";
-
+console.log("i'm in backend");
 const app = express();
 const server = createServer(app);
-const io = new Server(server,{
+const io = new Server(server,{ 
     cors: {
         origin: "*",
     },
-});
+}); 
 
 const chess = new Chess();
 
@@ -22,22 +22,29 @@ interface Players {
 let players: Players = {};
 let currentPlayers: "w" | "b" = "w";
 io.on("connection", (socket: Socket) => {
-    console.log("Connected socket:", socket.id);
+    // console.log("Connected socket:", socket.id);
 
     if (!players.white) {
         players.white = socket.id;
         socket.emit("playersRole", "w");
+        console.log("sending white role to player ",socket.id);
     } else if (!players.black) {
         players.black = socket.id;
         socket.emit("playersRole", "b");
+        console.log("sending black role to player ",socket.id);
     } else {
         socket.emit("spectatorRole", "spectator");
+        console.log("sending spectator role  to player ",socket.id);
     }
 
     socket.on("disconnect", () => {
         if (socket.id === players.white) {
+            console.log("white player disconnected");
             delete players.white;
+            delete players.black;
         } else if (socket.id === players.black) {
+            console.log("black player disconnected");
+            delete players.white;
             delete players.black;
         }
     });
@@ -59,7 +66,7 @@ io.on("connection", (socket: Socket) => {
                 socket.emit("InvalidMove", move);
             }
         } catch (error) {
-            console.error(error);
+            console.error("error happening in error part -> ",error);
         }
     });
 });

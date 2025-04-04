@@ -1,12 +1,30 @@
-import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 import { Chess, Square } from "chess.js";
+// import AutoRefreshComponent from "./AutoRefreshComponent";
 
-const socket = io("http://localhost:3000/");
+
 
 const chess = new Chess();
 
 const ChessBoard = () => {
+    const socket = useRef<Socket | null>(null);
+    // let socket : Socket;
+    useEffect(() => {
+      // Connect to backend ONLY when this page is mounted
+      socket.current = io("http://localhost:3000");
+    
+      socket.current.on("connect", () => {
+        // console.log("Connected to socket:", socket?.id);
+      });
+    
+      // Clean up when leaving the page
+      return () => {
+        socket.current?.disconnect();
+        console.log("Socket disconnected");
+      };
+    }, []);
+    
   const [board, setBoard] = useState(chess.board());
   const [playerRole, setPlayerRole] = useState<string | null>(null);
   const [sourceSquare, setSourceSquare] = useState<{
@@ -16,31 +34,37 @@ const ChessBoard = () => {
 
   useEffect(() => {
     const handlePlayersRole = (role: string) => {
+        console.log("role", role);
       setPlayerRole(role);
       setBoard([...chess.board()]);
     };
+    // alert("alert")
 
-    socket.on("playersRole", handlePlayersRole);
-    socket.on("spectatorRole", () => {
+    socket.current?.on("playersRole", (role: string) => {
+        // console.log("role are here the id is ", socket.id); 
+        setPlayerRole(role);
+      setBoard([...chess.board()]);
+    });
+    socket.current?.on("spectatorRole", () => {
       setPlayerRole(null);
       setBoard([...chess.board()]);
     });
-    socket.on("boardState", (fen: string) => {
+    socket.current?.on("boardState", (fen: string) => {
       chess.load(fen);
       setBoard([...chess.board()]);
     });
-    socket.on("move", (move: { from: Square; to: Square }) => {
+    socket.current?.on("move", (move: { from: Square; to: Square }) => {
       chess.move(move);
       setBoard([...chess.board()]);
     });
 
     return () => {
-      socket.off("playersRole", handlePlayersRole);
-      socket.off("spectatorRole");
-      socket.off("boardState");
-      socket.off("move");
+      socket.current?.off("playersRole", handlePlayersRole);
+      socket.current?.off("spectatorRole");
+      socket.current?.off("boardState");
+      socket.current?.off("move");
     };
-  }, []);
+  });
 
   const handleMove = (
     source: { row: number; col: number },
@@ -53,13 +77,16 @@ const ChessBoard = () => {
        to: `${String.fromCharCode(97 + target.col)}${8 - target.row}` as Square
     //   promotion: "q",
     };
-
+    // console.log("move", move," FEN -> ",chess.fen(),"socket -> ",socket.id);
+    // console.log(chess.history({verbose: true}))
+    console.log(chess.move(move))
     if (chess.move(move)) {
-      socket.emit("move", move);
+      socket.current?.emit("move", move);
       setBoard([...chess.board()]);
     }
   };
   
+  console.log(playerRole,"playerRole")
   return (
     <>
     <div
@@ -67,7 +94,8 @@ const ChessBoard = () => {
           playerRole === "w" ? "" : "rotate-180"
         } p-2`}
         >
-      { board.map((row, rowIndex) => {
+      { 
+      board.map((row, rowIndex) => {
           //  console.log(rowIndex);
           return (
               <div key={rowIndex} className="flex">
@@ -96,6 +124,7 @@ const ChessBoard = () => {
                         }
                       }}
                     >
+
                       {/* this part is for number and alphabat */}
                       {playerRole === "b" ? (
                         squareIndex == 7 ? (
@@ -107,7 +136,7 @@ const ChessBoard = () => {
                                   : "text-[#769656]"
                               } bottom-0 right-1 bg-transparent font-bold rotate-180`}
                             >
-                              {8 - rowIndex}
+                              { 8 - rowIndex }
                             </p>
                             {rowIndex == 0 && (
                               <p
@@ -141,7 +170,10 @@ const ChessBoard = () => {
                             {String.fromCharCode(104 - squareIndex)}
                           </p>
                         ) : null
-                      ) : squareIndex == 0 ? (
+                      ) : 
+                      
+                      // run when playerRole is white
+                      squareIndex == 0 ? (
                         <>
                           <p
                             className={`absolute ${
@@ -150,7 +182,7 @@ const ChessBoard = () => {
                                 : "text-[#769656]"
                             } top-0 left-1 bg-transparent font-bold `}
                           >
-                            {rowIndex + 1}
+                            {8 - rowIndex }
                           </p>
                           {rowIndex == 7 && (
                             <p
@@ -230,6 +262,7 @@ const ChessBoard = () => {
 
     </div>
      <p className="text-white text-2xl">Your are : {playerRole == "w"? "White":"Black"}</p>
+     {/* <AutoRefreshComponent/> */}
     </>
   );
 };
