@@ -11,7 +11,13 @@ const io = new Server(server,{
         origin: "*",
     },
 }); 
-
+// GET / route
+app.get('/', (req:any,res:any) => {
+    res.send({
+        activeStatus: true,
+        error: false
+    });
+});
 const chess = new Chess();
 
 interface Players {
