@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { Chess, Square } from "chess.js";
-import {  toast } from 'react-toastify';
 // import AutoRefreshComponent from "./AutoRefreshComponent";
 
 const chess = new Chess();

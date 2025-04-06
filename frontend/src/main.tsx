@@ -5,7 +5,7 @@ import App from './App.tsx'
 import { Bounce, ToastContainer } from 'react-toastify'
 // see and understand the frontend part 
 createRoot(document.getElementById('root')!).render(
-  <>
+  <StrictMode>
   <ToastContainer
   position="top-center"
   autoClose={3000}
@@ -21,5 +21,5 @@ createRoot(document.getElementById('root')!).render(
   toastClassName="bg-white"
   />
     <App />
-  </>,
+  </StrictMode>,
 )
