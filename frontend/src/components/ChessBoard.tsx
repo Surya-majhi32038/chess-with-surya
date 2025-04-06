@@ -96,7 +96,7 @@ const ChessBoard = () => {
 socket.current?.on("stopGame",(loser)=>{
     console.log("before the clear",chess.fen());
     chess.reset();
-    console.log("after the clear",chess.fen());
+    console.log("after the clear",chess.fen(),loser);
     // toast.info(`player ${loser.toUpperCase()} out of the game`)
     // setisGameStart(!isGameStart);
     // chess.reset();
