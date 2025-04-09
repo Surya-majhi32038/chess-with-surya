@@ -26,7 +26,7 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
     // Connect to backend ONLY when this page is mounted
-    socket.current = io("http://localhost:3000/");
+    socket.current = io("https://chess-with-surya-backend.vercel.app/");
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
