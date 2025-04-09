@@ -39,6 +39,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ start,onTimeUp }) => {
     } else {
       setBlinking(false);
     }
+    console.log(blinking)
   }, [seconds, start]);
 
   const formatTime = (s: number) => `0:${s < 10 ? `0${s}` : s}`;
