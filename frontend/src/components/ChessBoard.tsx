@@ -26,7 +26,7 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
     // Connect to backend ONLY when this page is mounted
-    socket.current = io("http://localhost:9000/");
+    socket.current = io("https://chess-with-surya.onrender.com");
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
@@ -369,7 +369,7 @@ const ChessBoard = () => {
             />
           </div>
           <div className="flex items-center gap-6 ">
-            <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} /> 
+            {/* <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />  */}
 
             <p
               onClick={undoHandler}
