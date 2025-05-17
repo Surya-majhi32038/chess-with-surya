@@ -369,7 +369,7 @@ const ChessBoard = () => {
             />
           </div>
           <div className="flex items-center gap-6 ">
-            {/* <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />  */}
+             <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />  
 
             <p
               onClick={undoHandler}
