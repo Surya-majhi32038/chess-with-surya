@@ -26,7 +26,7 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
     // Connect to backend ONLY when this page is mounted
-    socket.current = io("http://localhost:9000/");
+    socket.current = io("https://chess-with-surya.onrender.com");
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
