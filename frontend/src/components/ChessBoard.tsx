@@ -26,7 +26,7 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
     // Connect to backend ONLY when this page is mounted
-    socket.current = io("https://chess-with-surya-backend.vercel.app/");
+    socket.current = io("http://localhost:9000/");
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
@@ -56,6 +56,7 @@ const ChessBoard = () => {
     socket.current?.on("boardState", (fen: string, arr: []) => {
       settimeCounter(playerRole == chess.turn() ? true : false);
       // console.log("boardState->", arr);
+      setChessHistory([])
       setChessHistory(arr);
       chess.load(fen);
       setBoard([...chess.board()]);
@@ -116,6 +117,12 @@ const ChessBoard = () => {
     };
   });
 
+  // when a ChessHistry is changed
+  useEffect(() => {
+    console.log("ChessHistory changed:", ChessHistory);
+    //setChessHistory(ChessHistory);
+  }, [ChessHistory]);
+
   socket.current?.on("opponetGone", () => {
     setShowModal(true);
     seth1Tag("YOU WIN THE MATCH");
@@ -152,6 +159,10 @@ const ChessBoard = () => {
     settimeCounter(false);
   };
 
+  // reconnecting
+  const reConnect = () => {
+    socket.current?.emit("reConnect");
+  };
   const undoHandler = () => {
     console.log("undoHandler");
     socket.current?.emit("undoMove");
@@ -171,7 +182,7 @@ const ChessBoard = () => {
   if (showConnecting) return <div> Connectiong....</div>;
 
   return (
-    <div className="flex gap-10 ph:mt-20 ph:flex-col ">
+    <div className="flex gap-10 ph:overflow-auto no-scrollbar ph:mt-10 ph:flex-col ">
       <div className="flex flex-col ">
         {/* main board */}
         <div
@@ -358,7 +369,8 @@ const ChessBoard = () => {
             />
           </div>
           <div className="flex items-center gap-6 ">
-            <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />
+            {/* <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />  */}
+
             <p
               onClick={undoHandler}
               className=" bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-blue-600  cursor-pointer"
@@ -367,6 +379,8 @@ const ChessBoard = () => {
             </p>
           </div>
         </div>
+
+
         {/* <AutoRefreshComponent/> */}
         {showModal && (
           <Modal
@@ -377,6 +391,7 @@ const ChessBoard = () => {
               setShowModal(false);
               if (p2 == "Reconnecting") {
                 setshowConnecting(true);
+                reConnect();
               }
             }}
           />
@@ -384,56 +399,42 @@ const ChessBoard = () => {
       </div>
 
       {/* history part */}
+
       <div>
         <h1 className="text-white mb-5 text-2xl text-center font-bold  mt-4">
           History
         </h1>
         <div className="flex flex-col items-center justify-center">
           {/* heading part */}
-          <div className="flex gap-5 text-white text-xl">
+          <div className="flex ph:gap-7 font-semibold gap-5 text-white text-xl">
             <p>From</p>
             <p>To</p>
             <p>Piece</p>
           </div>
-          {ChessHistory.map((move: any, index: number) => {
-            return (
-              <div
-                className={`flex p-1 my-1 px-5 gap-8 ${
-                  index % 2 == 0 ? "bg-[#739254]" : "bg-[#EEEED2]"
-                }`}
-              >
-                <p
-                  className={`${
-                    index % 2 == 0
-                      ? "bg-[#739254] text-[#EEEED2]"
-                      : "bg-[#EEEED2] text-[#739254]"
-                  }`}
-                >
-                  {move.from}
-                </p>
-                <p
-                  className={`${
-                    index % 2 == 0
-                      ? "bg-[#739254] text-[#EEEED2]"
-                      : "bg-[#EEEED2] text-[#739254]"
-                  }`}
-                >
-                  {move.to}
-                </p>
-                <img
-                  src={`${
-                    index % 2 == 0
-                      ? move.piece.toUpperCase() + " copy"
-                      : move.piece + ""
-                  }.png`}
-                  alt=""
-                  className={`h-[20px] w-auto ${
-                    index % 2 == 0 ? "bg-[#739254]" : "bg-[#EEEED2]"
-                  }`}
-                />
-              </div>
-            );
-          })}
+          <div className="overflow-auto no-scrollbar scroll-smooth ph:h-[200px] h-[500px]">
+            {ChessHistory.slice()
+              .reverse()
+              .map((move: any, index: number) => {
+                return (
+                  <div
+                    key={`${move.from}-${move.to}-${index}`}
+                    className="flex p-1 font-light text-neutral-200 my-1 px-5 gap-8"
+                  >
+                    <p >{move.from}</p>
+                    <p >{move.to}</p>
+                    <img
+                      src={`${
+                        index % 2 === 0
+                          ? move.piece.toUpperCase() + " copy"
+                          : move.piece
+                      }.png`}
+                      alt=""
+                      className="h-[20px] w-auto"
+                    />
+                  </div>
+                );
+              })}
+          </div>
         </div>
       </div>
     </div>

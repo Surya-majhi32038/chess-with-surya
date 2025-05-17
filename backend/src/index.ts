@@ -1,9 +1,12 @@
+require("dotenv").config({path:'./.env'});
+
 const express = require("express");
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { Chess } from "chess.js";
 import path from "path";
-console.log("i'm in backend");
+import connectDB from "./db/index";
+console.log("i'm in backend ");
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -24,6 +27,9 @@ app.get('/', (req: any, res: any) => {
 //     black?: string;
 // }
 
+// Data base connectio function called 
+connectDB();
+
 class PlayersClass {
     public white: string;
     public black: string;
@@ -40,7 +46,7 @@ let Games: PlayersClass[] = [];
 
 // check it "init_game"
 
-
+// console.log("when the backend is start and Games array -> ", Games)
 let pendingUser: string | null;
 pendingUser = null
 let currentPlayers: "w" | "b" = "w";
@@ -52,8 +58,9 @@ io.on("connection", (socket: Socket) => {
     player = Games.find(game =>
         (game.white && !game.black) || (!game.white && game.black)
     );
-
-    if (player) {
+    
+    if (player) { // if any players are in the game(white or black)
+        console.log("i'm in player")
         if (player.white) {
             player.black = socket.id;
             socket.emit("playersRole", "b");
@@ -83,12 +90,15 @@ io.on("connection", (socket: Socket) => {
             // console.log("sending black role to player ", socket.id);
         }
     }
+    // console.log("Games array (every connection)", Games)
 
 
 
 
     socket.on("disconnect", () => {
-        Games = Games.filter(game => game.white || game.black);
+        // console.log("Client disconnected", socket.id);
+        // console.log("Games array before disconnect",Games)
+        Games = Games.filter(game => game.white  || game.black);
         // console.log("Games array disconnect",Games)
 
         let players: any;
@@ -192,8 +202,17 @@ io.on("connection", (socket: Socket) => {
              io.to(players.black).emit("boardState", players.chess.fen(),players.chess.history({ verbose: true }));
         }
     });
+
+    // after game complitation (like - any user gone, win, other case )
+    socket.on("reConnect",()=>{
+        //1. destroy the corrent game 
+
+        //2. find a new game , if present then start the game 
+    })
+
+
 });
 
-server.listen(3000, () => {
+server.listen(9000, () => { 
     console.log("Listening on port 3000");
 });
