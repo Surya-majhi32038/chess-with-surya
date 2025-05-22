@@ -53,6 +53,7 @@ const ChessBoard = () => {
       setBoard([...chess.board()]);
     });
 
+   
     socket.current?.on("boardState", (fen: string, arr: []) => {
       settimeCounter(playerRole == chess.turn() ? true : false);
       // console.log("boardState->", arr);
@@ -119,7 +120,7 @@ const ChessBoard = () => {
 
   // when a ChessHistry is changed
   useEffect(() => {
-    console.log("ChessHistory changed:", ChessHistory);
+    //console.log("ChessHistory changed:", ChessHistory);
     //setChessHistory(ChessHistory);
   }, [ChessHistory]);
 
@@ -134,6 +135,11 @@ const ChessBoard = () => {
     // }
     // if(showModal){setshowConnecting(!showConnecting)};
   });
+   // only for testing purpose
+    socket.current?.on("checkGamesArray", (game: []) => {
+      console.log("Games array ", game);
+
+    });
 
   socket.current?.on("TimeUp", (role: string) => {
     console.log("TimeUp", role);
@@ -182,7 +188,7 @@ const ChessBoard = () => {
   if (showConnecting) return <div> Connectiong....</div>;
 
   return (
-    <div className="flex gap-10 ph:overflow-auto no-scrollbar ph:mt-10 ph:flex-col ">
+    <div className="flex gap-10 ph:overflow-auto  no-scrollbar ph:mt-10 ph:flex-col ">
       <div className="flex flex-col ">
         {/* main board */}
         <div
@@ -330,6 +336,8 @@ const ChessBoard = () => {
                           } h-full bg-transparent ${
                             playerRole === "w" ? "" : "rotate-180"
                           }`}
+
+
                           draggable={playerRole === square.color}
                           onDragStart={(
                             e: React.DragEvent<HTMLImageElement>
@@ -342,6 +350,8 @@ const ChessBoard = () => {
                               e.dataTransfer.setData("text/plain", "");
                             }
                           }}
+
+                          
                         />
                       )}
                     </div>
@@ -411,7 +421,7 @@ const ChessBoard = () => {
             <p>To</p>
             <p>Piece</p>
           </div>
-          <div className="overflow-auto no-scrollbar scroll-smooth ph:h-[200px] h-[500px]">
+          <div className="overflow-auto no-scrollbar scroll-smooth ">
             {ChessHistory.slice()
               .reverse()
               .map((move: any, index: number) => {

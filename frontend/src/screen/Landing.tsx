@@ -10,10 +10,10 @@ const Landing = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <>
-      <header>
+    <div className="flex flex-col">
+     
         {/* head for phone  */}
-        <div className=" md:hidden flex justify-between p-1">
+        <div className=" md:hidden z-50 top-0 sticky flex justify-between p-1">
           <div className=" flex justify-between gap-1">
             {/* toggle part */}
             <div className="">
@@ -52,7 +52,7 @@ const Landing = () => {
             </p>
           </div>
         </div>
-      </header>
+      
 
 
       <div className="flex justify-center ph:p-2 ">
@@ -370,7 +370,7 @@ const Landing = () => {
           <Footer />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

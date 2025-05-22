@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const Footer = () => {
   return (
-    <footer className="mt-10 mb-3">
+    <footer className="mt-10 mb-3 bottom-0">
       <div className="text-[#8D8C8A] text-xs  flex flex-col items-center">
       <div className="flex items-center flex-wrap justify-center text-nowrap  h-auto font-medium text-[#989795] text-xs gap-1">
           <p className="hover:text-white cursor-pointer">Support</p>

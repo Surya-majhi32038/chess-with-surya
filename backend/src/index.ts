@@ -137,7 +137,7 @@ io.on("connection", (socket: Socket) => {
     );
 
     socket.on("move", (move: any) => {
-        console.log("after every movement ", Games)
+     console.log("after every movement ", Games)
         let players: any;
         players = Games.find(p => p.black === socket.id || p.white === socket.id);
         // console.log("move received:", move);
@@ -148,7 +148,7 @@ io.on("connection", (socket: Socket) => {
                 (players.chess.turn() === "b" && socket.id !== players?.black)) {
                 return;
             }
-
+            console.log("befor result ")
             const result = players.chess.move(move);
             if (result) {
                 currentPlayers = players.chess.turn();
@@ -158,6 +158,9 @@ io.on("connection", (socket: Socket) => {
                 io.to(players.black).emit("move", move)
                 io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
 
+                io.to(players.black).emit("checkGamesArray", Games);
+                console.log("send the games array to black ", Games);
+                io.to(players.white).emit("checkGamesArray", Games);
                 // io.emit("move", move); // Broadcast move event
                 // io.emit("boardState", chess.fen());
 
