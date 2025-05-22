@@ -82,6 +82,8 @@ io.on("connection", (socket: Socket) => {
                 console.log("here")
                 io.to(players.black).emit("startGame");
                 io.to(players.white).emit("startGame");
+                io.to(players.black).emit("printGames",Games);
+                io.to(players.white).emit("printGames",Games);
             }
             // console.log("sending black role to player ", socket.id);
         }

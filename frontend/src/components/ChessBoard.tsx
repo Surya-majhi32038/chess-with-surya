@@ -25,7 +25,7 @@ const ChessBoard = () => {
   const [timeCounter, settimeCounter] = useState(false);
   // let socket : Socket;
   useEffect(() => {
-    // Connect to backend ONLY when this page is mounted
+    // Connect to backend ONLY when this page is mounted  http://localhost:9000/
     socket.current = io("https://chess-with-surya.onrender.com");
 
     socket.current.on("connect", () => {
@@ -66,7 +66,10 @@ const ChessBoard = () => {
       chess.move(move);
       setBoard([...chess.board()]);
     });
-
+    // to print the whole game
+    socket.current?.on("printGames", (game: []) => {
+        console.log("Games array ", game);
+        });
     socket.current?.on("startGame", () => {
       // toast.success("Start Game")
       setshowConnecting(!showConnecting);
@@ -351,7 +354,7 @@ const ChessBoard = () => {
                             }
                           }}
 
-                          
+
                         />
                       )}
                     </div>
