@@ -98,6 +98,7 @@ io.on("connection", (socket: Socket) => {
         // console.log("Games array before disconnect",Games)
         Games = Games.filter(game => game.white || game.black); // if any of the player is not present then remove the game from the array
         // console.log("Games array disconnect",Games)
+        Games = Games.filter(game => !(game.white == "" && game.black == "")); // if any of the player is not present then remove the game from the array
         Games = Games.filter(game =>
             !(
                 (game.white === socket.id && game.black == null) ||
