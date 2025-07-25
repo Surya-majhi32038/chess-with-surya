@@ -17,6 +17,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "chess.js": "^1.1.0",
     "cros": "^1.0.1",
+    "dotenv": "^17.2.1",
     "lucide-react": "^0.484.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -54,7 +54,7 @@ const Game = () => {
         </div>
         <div className=" w-full h-full ph:flex-none flex flex-col justify-center items-center">
 
-       <ChessBoard /> 
+            <ChessBoard /> 
         
         </div>
         

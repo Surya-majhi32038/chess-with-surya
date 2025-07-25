@@ -25,8 +25,9 @@ const ChessBoard = () => {
   const [timeCounter, settimeCounter] = useState(false);
   // let socket : Socket;
   useEffect(() => {
-    // Connect to backend ONLY when this page is mounted  http://localhost:9000/
-    socket.current = io("https://chess-with-surya.onrender.com");
+    console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
+    // Connect to backend ONLY when this page is mounted   http://localhost:9000/ ${import.meta.env.VITE_SERVER_LOCAL_URL}
+    socket.current = io(`https://chess-with-surya.onrender.com`);
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
@@ -53,11 +54,10 @@ const ChessBoard = () => {
       setBoard([...chess.board()]);
     });
 
-   
     socket.current?.on("boardState", (fen: string, arr: []) => {
       settimeCounter(playerRole == chess.turn() ? true : false);
       // console.log("boardState->", arr);
-      setChessHistory([])
+      setChessHistory([]);
       setChessHistory(arr);
       chess.load(fen);
       setBoard([...chess.board()]);
@@ -68,8 +68,8 @@ const ChessBoard = () => {
     });
     // to print the whole game
     socket.current?.on("printGames", (game: []) => {
-        console.log("Games array ", game);
-        });
+      console.log("Games array ", game);
+    });
     socket.current?.on("startGame", () => {
       // toast.success("Start Game")
       setshowConnecting(!showConnecting);
@@ -138,11 +138,10 @@ const ChessBoard = () => {
     // }
     // if(showModal){setshowConnecting(!showConnecting)};
   });
-   // only for testing purpose
-    socket.current?.on("checkGamesArray", (game: []) => {
-      console.log("Games array ", game);
-
-    });
+  // only for testing purpose
+  socket.current?.on("checkGamesArray", (game: []) => {
+    console.log("Games array ", game);
+  });
 
   socket.current?.on("TimeUp", (role: string) => {
     console.log("TimeUp", role);
@@ -246,20 +245,20 @@ const ChessBoard = () => {
                             </p>
                             {rowIndex == 0 && (
                               <p
-                                className={`ph:text-[10px] ph:font-normal absolute ${
+                                className={`ph:text-[14px] ph:font-normal absolute ${
                                   (rowIndex + squareIndex) % 2 == 0
                                     ? "text-[#EEEED2]"
                                     : "text-[#769656]"
                                 } top-0 left-1 bg-transparent font-bold rotate-180`}
                               >
-                                a
+                                h
                               </p>
                             )}
                           </>
                         ) : // how to add here a character 'a' when i == 7 and 'a' is bottom-0 and right-1
                         rowIndex == 0 ? (
                           <p
-                            className={`ph:text-[10px] ph:font-normal absolute ${
+                            className={`ph:text-[14px] ph:-top-[2px] ph:left-[1px] ph:font-normal absolute ${
                               (rowIndex + squareIndex) % 2 == 0
                                 ? "text-[#EEEED2]"
                                 : "text-[#769656]"
@@ -273,7 +272,7 @@ const ChessBoard = () => {
                                 : `${rowIndex == 0 ? "top-0 left-1" : null}`
                             }  bg-transparent font-bold rotate-180`}
                           >
-                            {String.fromCharCode(104 - squareIndex)}
+                            {String.fromCharCode(97 + squareIndex)}
                           </p>
                         ) : null
                       ) : // run when playerRole is white
@@ -285,13 +284,13 @@ const ChessBoard = () => {
                               (rowIndex + squareIndex) % 2 == 0
                                 ? "text-[#EEEED2]"
                                 : "text-[#769656]"
-                            } top-0 left-1 ph:text-[10px] ph:font-normal bg-transparent font-bold `}
+                            } top-0 left-1 ph:text-[14px] ph:font-normal bg-transparent font-bold `}
                           >
                             {8 - rowIndex}
                           </p>
                           {rowIndex == 7 && (
                             <p
-                              className={`ph:text-[10px] ph:font-normal absolute ${
+                              className={`ph:text-[14px] ph:font-normal absolute ${
                                 (rowIndex + squareIndex) % 2 == 0
                                   ? "text-[#EEEED2]"
                                   : "text-[#769656]"
@@ -304,7 +303,7 @@ const ChessBoard = () => {
                       ) : // how to add here a character 'a' when i == 7 and 'a' is bottom-0 and right-1
                       rowIndex == 7 ? (
                         <p
-                          className={`ph:text-[10px] ph:font-normal absolute ${
+                          className={`ph:text-[14px] ph:-bottom-[2px] ph:right-[1px] ph:font-normal absolute ${
                             (rowIndex + squareIndex) % 2 == 0
                               ? "text-[#EEEED2]"
                               : "text-[#769656]"
@@ -339,8 +338,6 @@ const ChessBoard = () => {
                           } h-full bg-transparent ${
                             playerRole === "w" ? "" : "rotate-180"
                           }`}
-
-
                           draggable={playerRole === square.color}
                           onDragStart={(
                             e: React.DragEvent<HTMLImageElement>
@@ -353,8 +350,6 @@ const ChessBoard = () => {
                               e.dataTransfer.setData("text/plain", "");
                             }
                           }}
-
-
                         />
                       )}
                     </div>
@@ -382,7 +377,7 @@ const ChessBoard = () => {
             />
           </div>
           <div className="flex items-center gap-6 ">
-             <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />  
+            <CountdownTimer start={timeCounter} onTimeUp={handleTimeUp} />
 
             <p
               onClick={undoHandler}
@@ -392,7 +387,6 @@ const ChessBoard = () => {
             </p>
           </div>
         </div>
-
 
         {/* <AutoRefreshComponent/> */}
         {showModal && (
@@ -419,22 +413,22 @@ const ChessBoard = () => {
         </h1>
         <div className="flex flex-col items-center justify-center">
           {/* heading part */}
-          <div className="flex ph:gap-7 font-semibold gap-5 text-white text-xl">
+          <div className="flex  ph:gap-7 font-semibold gap-5 text-white text-xl">
             <p>From</p>
             <p>To</p>
             <p>Piece</p>
           </div>
-          <div className="overflow-auto no-scrollbar scroll-smooth ">
+          <div className="max-h-[400px] ph:max-h-[300px] overflow-y-auto  ">
             {ChessHistory.slice()
               .reverse()
               .map((move: any, index: number) => {
                 return (
                   <div
                     key={`${move.from}-${move.to}-${index}`}
-                    className="flex p-1 font-light text-neutral-200 my-1 px-5 gap-8"
+                    className="flex p-1 font-light justify-evenly text-neutral-200 my-1 px-5 gap-8"
                   >
-                    <p >{move.from}</p>
-                    <p >{move.to}</p>
+                    <p>{move.from}</p>
+                    <p>{move.to}</p>
                     <img
                       src={`${
                         index % 2 === 0

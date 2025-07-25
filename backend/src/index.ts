@@ -56,7 +56,7 @@ io.on("connection", (socket: Socket) => {
     );
 
     if (player) { // if any players are in the game(white or black)
-        console.log("i'm in player")
+        // console.log("i'm in player")
         if (player.white) {
             player.black = socket.id;
             socket.emit("playersRole", "b");
@@ -75,11 +75,12 @@ io.on("connection", (socket: Socket) => {
             const players = new PlayersClass(pendingUser, socket.id);
             pendingUser = null;
             Games.push(players);
+            console.log("New game created with players, games status", Games);
             // console.log("Games array ",Games)
             socket.emit("playersRole", "b");
             // Games.push(players)
             if (players.white && players.black) {
-                console.log("here")
+                // console.log("here")
                 io.to(players.black).emit("startGame");
                 io.to(players.white).emit("startGame");
                 io.to(players.black).emit("printGames",Games);
@@ -151,7 +152,7 @@ io.on("connection", (socket: Socket) => {
                 (players.chess.turn() === "b" && socket.id !== players?.black)) {
                 return;
             }
-            console.log("befor result ")
+            // console.log("befor result ")
             const result = players.chess.move(move);
             if (result) {
                 currentPlayers = players.chess.turn();
@@ -162,7 +163,7 @@ io.on("connection", (socket: Socket) => {
                 io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
 
                 io.to(players.black).emit("checkGamesArray", Games);
-                console.log("send the games array to black ", Games);
+                // console.log("send the games array to black ", Games);
                 io.to(players.white).emit("checkGamesArray", Games);
                 // io.emit("move", move); // Broadcast move event
                 // io.emit("boardState", chess.fen());
@@ -182,9 +183,9 @@ io.on("connection", (socket: Socket) => {
                     io.to(players.white).emit("Stalemate")
                     io.to(players.black).emit("Stalemate")
                     // io.emit("Stalemate");
-                    console.log('🤝 Stalemate. Game drawn.');
+                    // console.log('🤝 Stalemate. Game drawn.');
                 } else if (players.chess.isDraw()) {
-                    console.log('📏 Game drawn by rule.');
+                    // console.log('📏 Game drawn by rule.');
                     io.to(players.white).emit("GameIsDraw")
                     io.to(players.black).emit("GameIsDraw")
                     // io.emit("GameIsDraw");
@@ -223,5 +224,5 @@ io.on("connection", (socket: Socket) => {
 });
 
 server.listen(9000, () => {
-    console.log("Listening on port 3000");
+    console.log("Listening on port 9000");
 });

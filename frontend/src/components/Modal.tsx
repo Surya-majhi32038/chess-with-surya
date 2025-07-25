@@ -20,9 +20,9 @@ function Modal({ onClose,h1Tag,p1,p2 }:ModalProps ) {
     >
     <div className='bg-indigo-600 rounded-md'>
         <div className='flex flex-col justify-center bg-transparent items-center p-10 rounded-lg'>
-            <h1 className='text-2xl font-bold bg-transparent text-white'>{h1Tag}</h1>
+            <h1 className='lg:text-2xl text-[17px] font-bold bg-transparent text-white'>{h1Tag}</h1>
             <p className='text-white font-mono bg-transparent'>{p1}</p>
-            <p onClick={onClose} className='bg-black text-white font-serif  px-4 py-2 rounded mt-4 cursor-pointer hover:bg-white hover:text-indigo-600'>{p2}</p>
+            <p onClick={onClose} className='bg-black text-white font-serif  px-4 py-2 rounded mt-4 cursor-pointer hover:bg-white lg:text-base text-xs hover:text-indigo-600'>{p2}</p>
         </div>
     </div>
     </div>
