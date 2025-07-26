@@ -7,18 +7,18 @@ import { Bounce, ToastContainer } from 'react-toastify'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
   <ToastContainer
-  position="top-center"
-  autoClose={3000}
-  hideProgressBar={false}
-  newestOnTop={false}
-  closeOnClick={false}
-  rtl={false}
-  pauseOnFocusLoss
-  draggable
-  pauseOnHover
-  theme="light"
-  transition={Bounce}
-  toastClassName="bg-white"
+    position="top-center"
+    autoClose={3000}
+    hideProgressBar={false}
+    newestOnTop={false}
+    closeOnClick={false}
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="light"
+    transition={Bounce}
+    toastClassName="bg-white"
   />
     <App />
   </StrictMode>,

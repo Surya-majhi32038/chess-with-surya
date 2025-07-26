@@ -11,7 +11,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ start,onTimeUp }) => {
   const [blinking, setBlinking] = useState(false);
   useEffect(() => {
     if (start) {
-      setSeconds(10000000); // Reset the timer on every start signal
+      setSeconds(6000000); // Reset the timer on every start signal
     }
   }, [start]);
 
@@ -40,19 +40,19 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ start,onTimeUp }) => {
       setBlinking(false);
     }
     console.log(blinking)
-  }, [seconds, start]);
+  }, []);
 
   const formatTime = (s: number) => `0:${s < 10 ? `0${s}` : s}`;
 
   return (
     <div
-      className={`rounded-md px-4 py-2 flex items-center gap-2 shadow-md transition-colors duration-300 ${
+      className={`rounded-md px-4 ph:px-2 py-2 flex items-center gap-2 shadow-md transition-colors duration-300 ${
         seconds < 10 && start ? "bg-red-500 animate-pulse" : "bg-white"
       }`}
     >
-      <Clock className={`w-5 bg-transparent h-5 ${seconds < 10 && start ? "text-white" : "text-black"}`} />
+      <Clock className={`w-5 ph:w-4 bg-transparent h-5 ${seconds < 10 && start ? "text-white" : "text-black"}`} />
       <span
-        className={`text-lg bg-transparent font-semibold ${
+        className={`text-lg ph:text-sm bg-transparent font-semibold ${
           seconds < 10 && start ? "text-white " : "text-black "
         }`}
       >

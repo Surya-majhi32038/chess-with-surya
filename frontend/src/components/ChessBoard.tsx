@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 import { Chess, Square } from "chess.js";
 import Modal from "./Modal";
 import CountdownTimer from "./CountdownTimer";
+import { toast } from "react-toastify";
 // import AutoRefreshComponent from "./AutoRefreshComponent";
 
 const chess = new Chess();
@@ -25,9 +26,9 @@ const ChessBoard = () => {
   const [timeCounter, settimeCounter] = useState(false);
   // let socket : Socket;
   useEffect(() => {
-    console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
+    // console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
     // Connect to backend ONLY when this page is mounted   http://localhost:9000/ ${import.meta.env.VITE_SERVER_LOCAL_URL}
-    socket.current = io(`https://chess-with-surya.onrender.com`);
+    socket.current = io(`http://localhost:9000`);
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
@@ -47,7 +48,7 @@ const ChessBoard = () => {
       setBoard([...chess.board()]);
     };
     // alert("alert")
-
+    socket.current?.on("playersRole", handlePlayersRole);
     socket.current?.on("playersRole", (role: string) => {
       setPlayerRole(role);
 
@@ -108,6 +109,7 @@ const ChessBoard = () => {
       chess.reset();
       setBoard(chess.board());
     });
+
     socket.current?.on("GameIsDraw", () => {
       // toast.info("Game is Draw By any Rule")
       chess.reset();
@@ -175,7 +177,21 @@ const ChessBoard = () => {
     console.log("undoHandler");
     socket.current?.emit("undoMove");
   };
-  console.log(playerRole, "playerRole");
+  //   console.log(playerRole, "playerRole");
+ useEffect(() => {
+  const handleInvalidMove = (rote: any) => {
+    console.log("Invalid move for role:", rote);
+    toast.error(
+      `Invalid move! from ${rote.from} to ${rote.to}!` // Display the error message
+    );
+  };
+
+  socket.current?.on("Invalidmove", handleInvalidMove);
+
+  return () => {
+    socket.current?.off("Invalidmove", handleInvalidMove);
+  };
+}, []);
 
   const handleTimeUp = () => {
     // setMessage("⏰ You lost! Time's up!");
@@ -190,7 +206,7 @@ const ChessBoard = () => {
   if (showConnecting) return <div> Connectiong....</div>;
 
   return (
-    <div className="flex gap-10 ph:overflow-auto  no-scrollbar ph:mt-10 ph:flex-col ">
+    <div className="flex gap-7 ph:overflow-auto  no-scrollbar ph:mt-4 ph:flex-col ">
       <div className="flex flex-col ">
         {/* main board */}
         <div
@@ -361,7 +377,7 @@ const ChessBoard = () => {
         </div>
         <div className="flex justify-between ph:flex-col ph:gap-5 items-center mt-4">
           <div className="flex items-center gap-6">
-            <p className="text-white text-2xl">
+            <p className="text-white ph:text-xl text-2xl">
               Your are : {playerRole == "w" ? "White" : "Black"}
             </p>
             <img
@@ -369,7 +385,7 @@ const ChessBoard = () => {
                 playerRole == "w" ? "white" : "black"
               }.png`}
               alt=""
-              className={`h-14 ${
+              className={`h-14 ph:h-8 ph:w-8 ${
                 playerRole == "w"
                   ? "bg-[#4d4948] border-red-100"
                   : "bg-[] border-[#4d4948]"
@@ -381,7 +397,7 @@ const ChessBoard = () => {
 
             <p
               onClick={undoHandler}
-              className=" bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-blue-600  cursor-pointer"
+              className=" bg-blue-500 text-white px-4 ph:text-sm py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-blue-600  cursor-pointer"
             >
               undo
             </p>
@@ -408,7 +424,7 @@ const ChessBoard = () => {
       {/* history part */}
 
       <div>
-        <h1 className="text-white mb-5 text-2xl text-center font-bold  mt-4">
+        <h1 className="text-white mb-5 text-2xl text-center font-bold ph:mt-0 mt-4">
           History
         </h1>
         <div className="flex flex-col items-center justify-center">
@@ -418,7 +434,7 @@ const ChessBoard = () => {
             <p>To</p>
             <p>Piece</p>
           </div>
-          <div className="max-h-[400px] ph:max-h-[300px] overflow-y-auto  ">
+          <div className="max-h-[400px] ph:max-h-[150px] overflow-y-auto  ">
             {ChessHistory.slice()
               .reverse()
               .map((move: any, index: number) => {

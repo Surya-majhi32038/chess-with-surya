@@ -75,7 +75,7 @@ io.on("connection", (socket: Socket) => {
             const players = new PlayersClass(pendingUser, socket.id);
             pendingUser = null;
             Games.push(players);
-            console.log("New game created with players, games status", Games);
+            // console.log("New game created with players, games status", Games);
             // console.log("Games array ",Games)
             socket.emit("playersRole", "b");
             // Games.push(players)
@@ -83,8 +83,8 @@ io.on("connection", (socket: Socket) => {
                 // console.log("here")
                 io.to(players.black).emit("startGame");
                 io.to(players.white).emit("startGame");
-                io.to(players.black).emit("printGames",Games);
-                io.to(players.white).emit("printGames",Games);
+                io.to(players.black).emit("printGames", Games);
+                io.to(players.white).emit("printGames", Games);
             }
             // console.log("sending black role to player ", socket.id);
         }
@@ -141,7 +141,7 @@ io.on("connection", (socket: Socket) => {
     );
 
     socket.on("move", (move: any) => {
-     console.log("after every movement ", Games)
+        //  console.log("after every movement ", Games)
         let players: any;
         players = Games.find(p => p.black === socket.id || p.white === socket.id);
         // console.log("move received:", move);
@@ -154,7 +154,9 @@ io.on("connection", (socket: Socket) => {
             }
             // console.log("befor result ")
             const result = players.chess.move(move);
+            // console.log("after result ", result)
             if (result) {
+                console.log("Move made:", move);
                 currentPlayers = players.chess.turn();
                 io.to(players.white).emit("move", move)
                 io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
@@ -162,9 +164,9 @@ io.on("connection", (socket: Socket) => {
                 io.to(players.black).emit("move", move)
                 io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
 
-                io.to(players.black).emit("checkGamesArray", Games);
-                // console.log("send the games array to black ", Games);
-                io.to(players.white).emit("checkGamesArray", Games);
+                // io.to(players.black).emit("checkGamesArray", Games);
+                // // console.log("send the games array to black ", Games);
+                // io.to(players.white).emit("checkGamesArray", Games);
                 // io.emit("move", move); // Broadcast move event
                 // io.emit("boardState", chess.fen());
 
@@ -191,11 +193,21 @@ io.on("connection", (socket: Socket) => {
                     // io.emit("GameIsDraw");
                 }
             } else {
-                console.log("Invalid move:", move);
-                socket.emit("InvalidMove", move);
+                
+               
             }
         } catch (error) {
-            console.error("error happening in error part -> ", error, players.chess.fen());
+            const players = Games.find(p => p.black === socket.id || p.white === socket.id);
+            // console.log("Error in move:", error);
+                if (socket.id === players?.white) {
+                    io.to(players.white).emit("Invalidmove", move);
+                    console.log("Invalid move by white player:", move);
+                } 
+                if( socket.id === players?.black) {
+                    io.to(players?.black).emit("Invalidmove", move);
+                    console.log("Invalid move by black player:", socket.id);
+                }
+            // console.error("error happening in error part -> ", error);
         }
     });
 
