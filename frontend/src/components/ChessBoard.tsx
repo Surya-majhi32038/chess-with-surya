@@ -56,10 +56,12 @@ const ChessBoard = () => {
     });
 
     socket.current?.on("boardState", (fen: string, arr: []) => {
+        console.log("boardState", fen, arr);
       settimeCounter(playerRole == chess.turn() ? true : false);
       // console.log("boardState->", arr);
       setChessHistory([]);
       setChessHistory(arr);
+        console.log("ChessHistory", ChessHistory);
       chess.load(fen);
       setBoard([...chess.board()]);
     });
@@ -447,7 +449,7 @@ const ChessBoard = () => {
                     <p>{move.to}</p>
                     <img
                       src={`${
-                        index % 2 === 0
+                        move.color === "w"
                           ? move.piece.toUpperCase() + " copy"
                           : move.piece
                       }.png`}
