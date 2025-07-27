@@ -132,15 +132,13 @@ const ChessBoard = () => {
   }, [ChessHistory]);
 
   socket.current?.on("opponetGone", () => {
-    setShowModal(true);
-    seth1Tag("YOU WIN THE MATCH");
-    setp1(`your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} gone`);
-    setp2("Reconnecting");
+      seth1Tag("YOU WIN THE MATCH");
+      setp1(`your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} gone`);
+      setp2("Reconnecting");
+      setShowModal(true);
     console.log("show modal ", showModal);
-    // if(showModal){
-    //     setshowConnecting(!showConnecting)
-    // }
-    // if(showModal){setshowConnecting(!showConnecting)};
+    // settimeCounter(false);
+
   });
   // only for testing purpose
   socket.current?.on("checkGamesArray", (game: []) => {

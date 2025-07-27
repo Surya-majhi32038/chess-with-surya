@@ -21,11 +21,6 @@ app.get('/', (req: any, res: any) => {
     });
 });
 
-// interface Players {
-//     white?: string;
-//     black?: string;
-// }
-
 class PlayersClass {
     public white: string;
     public black: string;
@@ -48,15 +43,18 @@ pendingUser = null
 let currentPlayers: "w" | "b" = "w";
 io.on("connection", (socket: Socket) => {
 
-    /*
-  This line is looking through the Games array and finding a game where only one player is connected.
-
-It checks:
-game.white && !game.black → white is connected, black is not.
-
-!game.white && game.black → black is connected, white is not. */
-    let player: any;
-    player = Games.find(game =>
+   /**
+    * 1.find the game in the Games array which is one player 
+    * 2.if the game is found, check if the player is white or black
+    * 3.if the player is white, set the black player to the socket.id
+    * 4. same as white
+    * 5.if the game is not found, check if there is a pending user
+    * 6.if there is no pending user, set the pending user to the socket.id and emit the "playersRole" event with "w"
+    * 7.if there is a pending user, create a new game with the pending user and the socket.id, push it to the Games array and emit the "playersRole" event with "b"
+    * 
+    */
+   
+    const player = Games.find(game =>
         (game.white && !game.black) || (!game.white && game.black)
     );
 
@@ -88,53 +86,49 @@ game.white && !game.black → white is connected, black is not.
                 // console.log("here")
                 io.to(players.black).emit("startGame");
                 io.to(players.white).emit("startGame");
-                io.to(players.black).emit("printGames", Games);
-                io.to(players.white).emit("printGames", Games);
             }
-            // console.log("sending black role to player ", socket.id);
+           
         }
     }
-    // console.log("Games array (every connection)", Games)
-
-
-
 
     socket.on("disconnect", () => {
-        // console.log("Client disconnected", socket.id);
-        // console.log("Games array before disconnect",Games)
-        Games = Games.filter(game => game.white || game.black); // if any of the player is not present then remove the game from the array
-        // console.log("Games array disconnect",Games)
-        Games = Games.filter(game => !(game.white == "" && game.black == "")); // if any of the player is not present then remove the game from the array
-        Games = Games.filter(game =>
-            !(
-                (game.white === socket.id && game.black == null) ||
-                (game.black === socket.id && game.white == null)
-            )
-        );
-
-        let players: any;
-        players = Games.find(p => p.black === socket.id || p.white === socket.id);
+        /**
+         * 1. find the player in the Games array which is connected with the socket.id
+         * 2. if the player is found, check if the player is white or black
+         * 3. if the player is white, emit the "opponetGone" event to the black player
+         * 4. same as white
+         * 5. remove the whole game from the Games array
+         * 
+         * 
+         */
+        const players = Games.find(p => p.black === socket.id || p.white === socket.id);
         if (!players) {
             console.warn("No matching player found on disconnect:", socket.id);
             return;
         }
 
         //    console.log(players)
-        players?.chess?.reset();
+        // players?.chess?.reset();
 
         if (socket.id === players?.white) {
-            players.white = ""
-            io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
+            // players.white = ""
+            // io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
             io.to(players.black).emit("opponetGone");
 
         } else {
-            players.black = ""
-            io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
+            // players.black = ""
+            // io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
             io.to(players.white).emit("opponetGone");
         }
+         Games = Games.filter(game => {
+            return game.white !== socket.id && game.black !== socket.id;
+        });
         console.log("Player disconnected:", socket.id);
         console.log("Games array after disconnect", Games);
     });
+
+
+
     socket.on("timeUp", () => {
         let players: any;
         players = Games.find(p => p.black === socket.id || p.white === socket.id);
@@ -190,21 +184,18 @@ game.white && !game.black → white is connected, black is not.
                     io.to(players.black).emit("GameIsDraw")
                     // io.emit("GameIsDraw");
                 }
-            } else {
-                
-               
             }
         } catch (error) {
             const players = Games.find(p => p.black === socket.id || p.white === socket.id);
             // console.log("Error in move:", error);
-                if (socket.id === players?.white) {
-                    io.to(players.white).emit("Invalidmove", move);
-                    console.log("Invalid move by white player:", move);
-                } 
-                if( socket.id === players?.black) {
-                    io.to(players?.black).emit("Invalidmove", move);
-                    console.log("Invalid move by black player:", socket.id);
-                }
+            if (socket.id === players?.white) {
+                io.to(players.white).emit("Invalidmove", move);
+                console.log("Invalid move by white player:", move);
+            }
+            if (socket.id === players?.black) {
+                io.to(players?.black).emit("Invalidmove", move);
+                console.log("Invalid move by black player:", socket.id);
+            }
             // console.error("error happening in error part -> ", error);
         }
     });
@@ -226,45 +217,55 @@ game.white && !game.black → white is connected, black is not.
     // after game complitation (like - any user gone, win, other case )
     socket.on("reConnect", () => {
         // console.log("reConnect event triggered by ", socket.id);
-        let player: any;
-    player = Games.find(game =>
-        (game.white && !game.black) || (!game.white && game.black)
-    );
+       
+    //    const  player = Games.find(game =>
+    //         (game.white && !game.black) || (!game.white && game.black)
+    //     );
 
-    if (player) { // if any players are in the game(white or black)
-        // console.log("i'm in player")
-        if (player.white) {
-            player.black = socket.id;
-            socket.emit("playersRole", "b");
-        } else {
-            player.white = socket.id;
-            socket.emit("playersRole", "w");
+        // if (player) { // if any players are in the game(white or black)
+        //     // console.log("i'm in player")
+        //     if (player.white) {
+        //         player.black = socket.id;
+        //         socket.emit("playersRole", "b");
+        //     } else {
+        //         player.white = socket.id;
+        //         socket.emit("playersRole", "w");
+        //     } //  when disconnect any player it conncet with alon (problem)
+        //     io.to(player.black).emit("startGame");
+        //     io.to(player.white).emit("startGame");
+        // } else {
+            if (!pendingUser) {
+                pendingUser = socket.id
+                socket.emit("playersRole", "w");
+                // console.log("sending white role to player ", socket.id);
+            } else {
+                // const isValidId = (id: unknown): id is string => {
+                //     return typeof id === "string" && id.trim().length > 0;
+                // };
+
+                // if (!isValidId(socket.id) || !isValidId(pendingUser)) {
+                //     console.warn("Invalid player IDs", { socketId: socket.id, pendingUser });
+                //     return;
+                // }
+
+
+                const players = new PlayersClass(pendingUser, socket.id);
+                pendingUser = null;
+                Games.push(players);
+                // console.log("New game created with players, games status", Games);
+                // console.log("Games array ",Games)
+                socket.emit("playersRole", "b");
+                // Games.push(players)
+                if (players.white && players.black) {
+                    // console.log("here")
+                    io.to(players.black).emit("startGame");
+                    io.to(players.white).emit("startGame");
+                    io.to(players.black).emit("printGames", Games);
+                    io.to(players.white).emit("printGames", Games);
+                }
+                // console.log("sending black role to player ", socket.id);
+            // }
         }
-        io.to(player.black).emit("startGame");
-        io.to(player.white).emit("startGame");
-    } else {
-        if (!pendingUser) {
-            pendingUser = socket.id
-            socket.emit("playersRole", "w");
-            // console.log("sending white role to player ", socket.id);
-        } else {
-            const players = new PlayersClass(pendingUser, socket.id);
-            pendingUser = null;
-            Games.push(players);
-            // console.log("New game created with players, games status", Games);
-            // console.log("Games array ",Games)
-            socket.emit("playersRole", "b");
-            // Games.push(players)
-            if (players.white && players.black) {
-                // console.log("here")
-                io.to(players.black).emit("startGame");
-                io.to(players.white).emit("startGame");
-                io.to(players.black).emit("printGames", Games);
-                io.to(players.white).emit("printGames", Games);
-            }
-            // console.log("sending black role to player ", socket.id);
-        }
-    }
     })
 
 
