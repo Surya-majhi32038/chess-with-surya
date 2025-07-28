@@ -261,7 +261,8 @@ io.on("connection", (socket: Socket) => {
 
     // });
 
-    server.listen(9000, () => {
-        console.log("Listening on port 9000");
-    });
+    
 });
+server.listen(9000, () => {
+        console.log("Listening on port 9000");
+ });
