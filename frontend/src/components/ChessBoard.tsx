@@ -25,10 +25,10 @@ const ChessBoard = () => {
   const socket = useRef<Socket | null>(null);
   const [board, setBoard] = useState(chess.board());
   const [playerRole, setPlayerRole] = useState<string | null>(null);
-  const [sourceSquare, setSourceSquare] = useState<{
-    row: number;
-    col: number;
-  } | null>(null);
+//   const [sourceSquare, setSourceSquare] = useState<{
+//     row: number;
+//     col: number;
+//   } | null>(null);
   const [ChessHistory, setChessHistory] = useState([]);
   const [timeCounter, settimeCounter] = useState(false);
   // let socket : Socket;
@@ -420,18 +420,18 @@ const ChessBoard = () => {
                           } h-full bg-transparent ${
                             playerRole === "w" ? "" : "rotate-180"
                           }`}
-                          draggable={playerRole === square.color}
-                          onDragStart={(
-                            e: React.DragEvent<HTMLImageElement>
-                          ) => {
-                            if (playerRole === square.color) {
-                              setSourceSquare({
-                                row: rowIndex,
-                                col: squareIndex,
-                              });
-                              e.dataTransfer.setData("text/plain", "");
-                            }
-                          }}
+                        //   draggable={playerRole === square.color}
+                        //   onDragStart={(
+                        //     e: React.DragEvent<HTMLImageElement>
+                        //   ) => {
+                        //     if (playerRole === square.color) {
+                        //       setSourceSquare({
+                        //         row: rowIndex,
+                        //         col: squareIndex,
+                        //       });
+                        //       e.dataTransfer.setData("text/plain", "");
+                        //     }
+                        //   }}
                         />
                       )}
                     </div>
