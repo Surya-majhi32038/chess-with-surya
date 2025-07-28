@@ -10,6 +10,13 @@ const chess = new Chess();
 
 const ChessBoard = () => {
   console.log("chessBoard");
+  const [sourceSquares, setSourceSquares] = useState<null | {
+    row: number;
+    col: number;
+  }>(null);
+  const [validMoves, setValidMoves] = useState<{ row: number; col: number }[]>(
+    []
+  );
   const [showConnecting, setshowConnecting] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [h1Tag, seth1Tag] = useState("");
@@ -27,8 +34,8 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
     // console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
-    // Connect to backend ONLY when this page is mounted   http://localhost:9000/ ${import.meta.env.VITE_SERVER_LOCAL_URL}
-    socket.current = io(`https://chess-with-surya.onrender.com/`);
+    // Connect to backend ONLY when this page is mounted https://chess-with-surya.onrender.com/  ${import.meta.env.VITE_SERVER_LOCAL_URL}
+    socket.current = io(`http://localhost:9000/`);
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
@@ -56,12 +63,12 @@ const ChessBoard = () => {
     });
 
     socket.current?.on("boardState", (fen: string, arr: []) => {
-        console.log("boardState", fen, arr);
+      console.log("boardState", fen, arr);
       settimeCounter(playerRole == chess.turn() ? true : false);
       // console.log("boardState->", arr);
       setChessHistory([]);
       setChessHistory(arr);
-        console.log("ChessHistory", ChessHistory);
+      console.log("ChessHistory", ChessHistory);
       chess.load(fen);
       setBoard([...chess.board()]);
     });
@@ -82,43 +89,50 @@ const ChessBoard = () => {
       setp1(`You are :${playerRole == "w" ? "WHITE" : "BLACK"}`);
       setp2("Let's Play");
       settimeCounter(playerRole == "w" ? true : false);
-      // console.log("in startGame ", showConnecting);
-      // console.log("isGameStart : ", showConnecting);
+
     });
 
     socket.current?.on("Checkmate", () => {
+        chess.reset();
       if (playerRole == "w") {
         // toast.success("THE WHITE IS WINNER")
         setShowModal(true);
-        seth1Tag("YOU WIN THE MATCH");
+        seth1Tag(" WIN THE MATCH 🎉");
         setp1(
-          `your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmate`
+          `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmated`
         );
         setp2("Reconnecting");
       } else {
         setShowModal(true);
-        seth1Tag("YOU WIN THE MATCH");
+        seth1Tag("LOST THE MATCH 😢");
         setp1(
-          `your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmate`
+          `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmate`
         );
         setp2("Reconnecting");
         // toast.success("THE BLACK IS WINNER")
       }
-      setBoard([...chess.board()]);
+    //   setBoard([...chess.board()]);
     });
     socket.current?.on("Stalemate", () => {
       // toast.info("Stalemate type of Draw")
       chess.reset();
+      setShowModal(true);
+        seth1Tag(" THE MATCH IS TIE");
+        setp1(" No legal moves available and no check – it's a tie!");
+        setp2("Reconnecting");
       setBoard(chess.board());
     });
 
     socket.current?.on("GameIsDraw", () => {
-      // toast.info("Game is Draw By any Rule")
       chess.reset();
+      setShowModal(true);
+        seth1Tag(" THE MATCH IS TIE");
+        setp1(" No legal moves available and no check – it's a tie!");
+        setp2("Reconnecting");
       setBoard(chess.board());
     });
     return () => {
-      socket.current?.off("playersRole", handlePlayersRole);
+      socket.current?.off("playersRole", handlePlayersRole); 
       socket.current?.off("spectatorRole");
       socket.current?.off("boardState");
       socket.current?.off("move");
@@ -132,13 +146,12 @@ const ChessBoard = () => {
   }, [ChessHistory]);
 
   socket.current?.on("opponetGone", () => {
-      seth1Tag("YOU WIN THE MATCH");
-      setp1(`your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} gone`);
-      setp2("Reconnecting");
-      setShowModal(true);
+    seth1Tag("YOU WIN THE MATCH");
+    setp1(`your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} gone`);
+    setp2("Reconnecting");
+    setShowModal(true);
     console.log("show modal ", showModal);
     // settimeCounter(false);
-
   });
   // only for testing purpose
   socket.current?.on("checkGamesArray", (game: []) => {
@@ -178,20 +191,20 @@ const ChessBoard = () => {
     socket.current?.emit("undoMove");
   };
   //   console.log(playerRole, "playerRole");
- useEffect(() => {
-  const handleInvalidMove = (rote: any) => {
-    console.log("Invalid move for role:", rote);
-    toast.error(
-      `Invalid move! from ${rote.from} to ${rote.to}!` // Display the error message
-    );
-  };
+  useEffect(() => {
+    const handleInvalidMove = (rote: any) => {
+      console.log("Invalid move for role:", rote);
+      toast.error(
+        `Invalid move! from ${rote.from} to ${rote.to}!` // Display the error message
+      );
+    };
 
-  socket.current?.on("Invalidmove", handleInvalidMove);
+    socket.current?.on("Invalidmove", handleInvalidMove);
 
-  return () => {
-    socket.current?.off("Invalidmove", handleInvalidMove);
-  };
-}, []);
+    return () => {
+      socket.current?.off("Invalidmove", handleInvalidMove);
+    };
+  }, []);
 
   const handleTimeUp = () => {
     // setMessage("⏰ You lost! Time's up!");
@@ -202,6 +215,49 @@ const ChessBoard = () => {
     setp2("Reconnecting");
     settimeCounter(false); // Optionally stop the timer or prevent restart
   };
+
+  // this is for phone
+
+
+
+  function handleSquareClick(row: number, col: number) {
+    const file = "abcdefgh"[col];
+    const rank = 8 - row;
+    const square = `${file}${rank}` as Square;
+
+    if (sourceSquares) {
+      // Destination click
+      const dest = { row, col };
+      const isValid = validMoves.some(
+        (move) => move.row === dest.row && move.col === dest.col
+      );
+
+      if (isValid) {
+        handleMove(sourceSquares, dest);
+      }
+
+      setSourceSquares(null);
+      setValidMoves([]);
+    } else {
+      // Source click
+      const moves = chess.moves({ square, verbose: true });
+      const destinations = moves.map((m) => {
+        const toFile = m.to[0];
+        const toRank = m.to[1];
+        return {
+          row: 8 - parseInt(toRank),
+          col: "abcdefgh".indexOf(toFile),
+        };
+      });
+      console.log(destinations);
+
+// add green live but not tested from chatGPT
+      if (destinations.length > 0) {
+        setSourceSquares({ row, col });
+        setValidMoves(destinations);
+      }
+    }
+  }
 
   if (showConnecting) return <div> Connectiong....</div>;
 
@@ -227,24 +283,34 @@ const ChessBoard = () => {
                               (rowIndex + squareIndex) % 2 == 0
                                 ? "bg-[#769656]"
                                 : "bg-[#EEEED2]"
-                            } relative`}
-                      onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
-                        e.preventDefault()
-                      }
-                      onDrop={(e: React.DragEvent<HTMLDivElement>) => {
-                        e.preventDefault();
-                        if (sourceSquare) {
-                          handleMove(sourceSquare, {
-                            row: rowIndex,
-                            col: squareIndex,
-                          });
-                          // console.log("player color :",playerRole,sourceSquare, "sourceSquare",{
-                          //     row: rowIndex,
-                          //     col: squareIndex,
-                          //   });
-                          setSourceSquare(null);
-                        }
-                      }}
+                            } relative
+                            ${
+                              validMoves.some(
+                                (m) =>
+                                  m.row === rowIndex && m.col === squareIndex
+                              )
+                                ? "bg-yellow-400 bg-opacity-50"
+                                : ""
+                            }
+                            `}
+                    //   onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
+                    //     e.preventDefault()
+                    //   }
+                      onClick={() => handleSquareClick(rowIndex, squareIndex)}
+                    //   onDrop={(e: React.DragEvent<HTMLDivElement>) => {
+                    //     e.preventDefault();
+                    //     // if (sourceSquare) {
+                    //     //   handleMove(sourceSquare, {
+                    //     //     row: rowIndex,
+                    //     //     col: squareIndex,
+                    //     //   });
+                    //     //   // console.log("player color :",playerRole,sourceSquare, "sourceSquare",{
+                    //     //   //     row: rowIndex,
+                    //     //   //     col: squareIndex,
+                    //     //   //   });
+                    //     //   setSourceSquare(null);
+                    //     // }
+                    //   }}
                     >
                       {/* this part is for number and alphabat */}
                       {playerRole == null ? null : playerRole === "b" ? (
