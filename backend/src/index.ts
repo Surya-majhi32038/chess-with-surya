@@ -43,17 +43,17 @@ pendingUser = null
 let currentPlayers: "w" | "b" = "w";
 io.on("connection", (socket: Socket) => {
 
-   /**
-    * 1.find the game in the Games array which is one player 
-    * 2.if the game is found, check if the player is white or black
-    * 3.if the player is white, set the black player to the socket.id
-    * 4. same as white
-    * 5.if the game is not found, check if there is a pending user
-    * 6.if there is no pending user, set the pending user to the socket.id and emit the "playersRole" event with "w"
-    * 7.if there is a pending user, create a new game with the pending user and the socket.id, push it to the Games array and emit the "playersRole" event with "b"
-    * 
-    */
-   
+    /**
+     * 1.find the game in the Games array which is one player 
+     * 2.if the game is found, check if the player is white or black
+     * 3.if the player is white, set the black player to the socket.id
+     * 4. same as white
+     * 5.if the game is not found, check if there is a pending user
+     * 6.if there is no pending user, set the pending user to the socket.id and emit the "playersRole" event with "w"
+     * 7.if there is a pending user, create a new game with the pending user and the socket.id, push it to the Games array and emit the "playersRole" event with "b"
+     * 
+     */
+
     const player = Games.find(game =>
         (game.white && !game.black) || (!game.white && game.black)
     );
@@ -87,7 +87,7 @@ io.on("connection", (socket: Socket) => {
                 io.to(players.black).emit("startGame");
                 io.to(players.white).emit("startGame");
             }
-           
+
         }
     }
 
@@ -120,7 +120,7 @@ io.on("connection", (socket: Socket) => {
             // io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
             io.to(players.white).emit("opponetGone");
         }
-         Games = Games.filter(game => {
+        Games = Games.filter(game => {
             return game.white !== socket.id && game.black !== socket.id;
         });
         console.log("Player disconnected:", socket.id);
@@ -216,61 +216,52 @@ io.on("connection", (socket: Socket) => {
 
     // after game complitation (like - any user gone, win, other case )
     socket.on("reConnect", () => {
-        // console.log("reConnect event triggered by ", socket.id);
-       
-    //    const  player = Games.find(game =>
-    //         (game.white && !game.black) || (!game.white && game.black)
-    //     );
 
-        // if (player) { // if any players are in the game(white or black)
-        //     // console.log("i'm in player")
-        //     if (player.white) {
-        //         player.black = socket.id;
-        //         socket.emit("playersRole", "b");
-        //     } else {
-        //         player.white = socket.id;
-        //         socket.emit("playersRole", "w");
-        //     } //  when disconnect any player it conncet with alon (problem)
-        //     io.to(player.black).emit("startGame");
-        //     io.to(player.white).emit("startGame");
-        // } else {
-            if (!pendingUser) {
-                pendingUser = socket.id
-                socket.emit("playersRole", "w");
-                // console.log("sending white role to player ", socket.id);
-            } else {
-                // const isValidId = (id: unknown): id is string => {
-                //     return typeof id === "string" && id.trim().length > 0;
-                // };
+        if (!pendingUser) {
+            pendingUser = socket.id
+            socket.emit("playersRole", "w");
 
-                // if (!isValidId(socket.id) || !isValidId(pendingUser)) {
-                //     console.warn("Invalid player IDs", { socketId: socket.id, pendingUser });
-                //     return;
-                // }
-
-
-                const players = new PlayersClass(pendingUser, socket.id);
-                pendingUser = null;
-                Games.push(players);
-                // console.log("New game created with players, games status", Games);
-                // console.log("Games array ",Games)
-                socket.emit("playersRole", "b");
-                // Games.push(players)
-                if (players.white && players.black) {
-                    // console.log("here")
-                    io.to(players.black).emit("startGame");
-                    io.to(players.white).emit("startGame");
-                    io.to(players.black).emit("printGames", Games);
-                    io.to(players.white).emit("printGames", Games);
-                }
-                // console.log("sending black role to player ", socket.id);
+        } else {
+            const players = new PlayersClass(pendingUser, socket.id);
+            pendingUser = null;
+            Games.push(players);
+            // console.log("New game created with players, games status", Games);
+            // console.log("Games array ",Games)
+            socket.emit("playersRole", "b");
+            // Games.push(players)
+            if (players.white && players.black) {
+                // console.log("here")
+                io.to(players.black).emit("startGame");
+                io.to(players.white).emit("startGame");
+                // io.to(players.black).emit("printGames", Games);
+                // io.to(players.white).emit("printGames", Games);
+            }
+            // console.log("sending black role to player ", socket.id);
             // }
         }
     })
+    // socket.on("reStartGame", (socketId1, socketId2) => {
 
 
-});
+    //     const players = new PlayersClass(socketId1, socketId2);
+    //     Games.push(players);
+    //     io.to(players.black).emit("playersRole", "b");
+    //     io.to(players.white).emit("playersRole", "w");
+    //     // Games.push(players)
+    //     if (players.white && players.black) {
+    //         // console.log("here")
+    //         io.to(players.black).emit("startGame");
+    //         io.to(players.white).emit("startGame");
+    //         // io.to(players.black).emit("printGames", Games);
+    //         // io.to(players.white).emit("printGames", Games);
+    //     }
+    //     // console.log("sending black role to player ", socket.id);
+    //     // }
 
-server.listen(9000, () => {
-    console.log("Listening on port 9000");
+
+    // });
+
+    server.listen(9000, () => {
+        console.log("Listening on port 9000");
+    });
 });

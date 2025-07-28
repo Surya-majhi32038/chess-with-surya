@@ -34,6 +34,7 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
     // console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
+    // http://localhost:9000/ http://localhost:9000/
     // Connect to backend ONLY when this page is mounted https://chess-with-surya.onrender.com/  ${import.meta.env.VITE_SERVER_LOCAL_URL}
     socket.current = io(`https://chess-with-surya.onrender.com/`);
 
@@ -56,11 +57,11 @@ const ChessBoard = () => {
     };
     // alert("alert")
     socket.current?.on("playersRole", handlePlayersRole);
-    socket.current?.on("playersRole", (role: string) => {
-      setPlayerRole(role);
+    // socket.current?.on("playersRole", (role: string) => {
+    //   setPlayerRole(role);
 
-      setBoard([...chess.board()]);
-    });
+    //   setBoard([...chess.board()]);
+    // });
 
     socket.current?.on("boardState", (fen: string, arr: []) => {
       console.log("boardState", fen, arr);
@@ -68,7 +69,7 @@ const ChessBoard = () => {
       // console.log("boardState->", arr);
       setChessHistory([]);
       setChessHistory(arr);
-      console.log("ChessHistory", ChessHistory);
+    //   console.log("ChessHistory", ChessHistory);
       chess.load(fen);
       setBoard([...chess.board()]);
     });
@@ -93,22 +94,23 @@ const ChessBoard = () => {
     });
 
     socket.current?.on("Checkmate", () => {
-        chess.reset();
       if (playerRole == "w") {
+        chess.reset();
         // toast.success("THE WHITE IS WINNER")
         setShowModal(true);
         seth1Tag(" WIN THE MATCH 🎉");
         setp1(
           `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmated`
         );
-        setp2("Reconnecting");
+        setp2("Play Again");
       } else {
+        chess.reset();
         setShowModal(true);
         seth1Tag("LOST THE MATCH 😢");
         setp1(
-          `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmate`
+          `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmated`
         );
-        setp2("Reconnecting");
+        setp2("Play Again");
         // toast.success("THE BLACK IS WINNER")
       }
     //   setBoard([...chess.board()]);
@@ -147,7 +149,7 @@ const ChessBoard = () => {
 
   socket.current?.on("opponetGone", () => {
     seth1Tag("YOU WIN THE MATCH");
-    setp1(`your opponent ${playerRole == "w" ? "BLACK" : "WHITE"} gone`);
+    setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"} Left ⚠️  `);
     setp2("Reconnecting");
     setShowModal(true);
     console.log("show modal ", showModal);
@@ -184,6 +186,8 @@ const ChessBoard = () => {
 
   // reconnecting
   const reConnect = () => {
+    chess.reset();
+    setBoard(chess.board());
     socket.current?.emit("reConnect");
   };
   const undoHandler = () => {
@@ -279,7 +283,7 @@ const ChessBoard = () => {
                     <div
                       key={`${rowIndex}-${squareIndex}`}
                       className={`
-                            w-9 h-9  md:w-16 md:h-16  flex justify-center  cursor-pointer items-center ${
+                            w-10 h-10  md:w-16 md:h-16  flex justify-center  cursor-pointer items-center ${
                               (rowIndex + squareIndex) % 2 == 0
                                 ? "bg-[#769656]"
                                 : "bg-[#EEEED2]"
@@ -420,18 +424,7 @@ const ChessBoard = () => {
                           } h-full bg-transparent ${
                             playerRole === "w" ? "" : "rotate-180"
                           }`}
-                        //   draggable={playerRole === square.color}
-                        //   onDragStart={(
-                        //     e: React.DragEvent<HTMLImageElement>
-                        //   ) => {
-                        //     if (playerRole === square.color) {
-                        //       setSourceSquare({
-                        //         row: rowIndex,
-                        //         col: squareIndex,
-                        //       });
-                        //       e.dataTransfer.setData("text/plain", "");
-                        //     }
-                        //   }}
+                     
                         />
                       )}
                     </div>
@@ -481,6 +474,12 @@ const ChessBoard = () => {
               if (p2 == "Reconnecting") {
                 setshowConnecting(true);
                 reConnect();
+                setChessHistory([]);
+              } else if (p2 == "Play Again") {
+                chess.reset();
+                setBoard(chess.board());
+                setChessHistory([]);
+                // socket.current?.emit("reStartGame");
               }
             }}
           />
@@ -500,7 +499,7 @@ const ChessBoard = () => {
             <p>To</p>
             <p>Piece</p>
           </div>
-          <div className="max-h-[400px] ph:max-h-[150px] overflow-y-auto  ">
+          <div className="max-h-[400px] ph:h-[120px] overflow-y-auto  ">
             {ChessHistory.slice()
               .reverse()
               .map((move: any, index: number) => {

@@ -8,7 +8,7 @@ const Game = () => {
      const [isOpen, setIsOpen] = useState(false);
  
   return (
-    <div className="flex  items-center ph:flex-col h-screen">
+    <div className="flex  items-center ph:flex-col lg:h-screen">
          {/* head for phone  */}
         <div className=" md:hidden sticky ph:left-0 top-0 flex justify-between p-1">
           <div className=" flex justify-between gap-1">
