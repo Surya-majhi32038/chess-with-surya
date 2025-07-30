@@ -71,9 +71,9 @@ const ChessBoard = () => {
     //   console.log("isCapture", isCapture);
     //   console.log("lastMove", lastMove);
       if (isCapture) {
-        playSound("../../public/sounds/capture.mp3");
+        playSound("/sounds/capture.mp3");
       } else {
-        playSound("../../public/sounds/move.mp3");
+        playSound("/sounds/move.mp3");
       }
      // playSound("../../public/sounds/move.mp3");
       settimeCounter(playerRole == chess.turn() ? true : false);
@@ -105,7 +105,7 @@ const ChessBoard = () => {
 
     socket.current?.on("Checkmate", (winner) => {
       setShowModal(true);
-        playSound("../../public/sounds/checkmate.mp3");
+        playSound("/sounds/checkmate.mp3");
       if (!playerRole) return;
       const isWinner = playerRole === winner;
 
@@ -125,7 +125,7 @@ const ChessBoard = () => {
       settimeCounter(false);
     });
     socket.current?.on("Stalemate", () => {
-      playSound("../../public/sounds/game over (statlemate).mp3");
+      playSound("/sounds/game over (statlemate).mp3");
       chess.reset();
       setShowModal(true);
       seth1Tag(" THE MATCH IS TIE");
@@ -157,7 +157,7 @@ const ChessBoard = () => {
   }, [ChessHistory]);
 
   socket.current?.on("opponetGone", () => {
-    playSound("../../public/sounds/game over.mp3");
+    playSound("/sounds/game over.mp3");
     seth1Tag("YOU WIN THE MATCH");
     setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"}Left ⚠️`);
     setp2("Reconnecting");
@@ -172,7 +172,7 @@ const ChessBoard = () => {
 
   socket.current?.on("TimeUp", (role: string) => {
     // console.log("TimeUp", role);
-    playSound("../../public/sounds/game over.mp3");
+    playSound("/sounds/game over.mp3");
     setShowModal(true);
     seth1Tag("YOU WIN THE MATCH");
     setp1(`your opponent ${role} is Time Up`);
