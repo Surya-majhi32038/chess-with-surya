@@ -36,7 +36,7 @@ const ChessBoard = () => {
     // console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
     //  http://localhost:9000/
     // Connect to backend ONLY when this page is mounted https://chess-with-surya.onrender.com/  ${import.meta.env.VITE_SERVER_LOCAL_URL}
-    socket.current = io(`http://localhost:9000/`);
+    socket.current = io(`https://chess-with-surya.onrender.com/`);
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
