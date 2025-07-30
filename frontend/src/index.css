@@ -22,3 +22,18 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #a89d9d;
 }
+
+/* @keyframes pieceMove {
+  0% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-piece {
+  animation: pieceMove 0.2s ease-in-out;
+} */

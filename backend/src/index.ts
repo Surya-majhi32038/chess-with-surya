@@ -156,7 +156,7 @@ io.on("connection", (socket: Socket) => {
             const result = players.chess.move(move);
             // console.log("after result ", result)
             if (result) {
-                console.log("Move made:", move);
+                // console.log("Move made:", move);
                 currentPlayers = players.chess.turn();
                 io.to(players.white).emit("move", move)
                 io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
@@ -165,14 +165,26 @@ io.on("connection", (socket: Socket) => {
                 io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
 
                 if (players.chess.isCheckmate() || players.chess.isCheck()) {
+                    const winner = players.chess.turn() === "w" ? "black" : "white";
 
-                    io.to(players.white).emit("Checkmate")
-                    io.to(players.black).emit("Checkmate")
-                    io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
-                    io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
+                    // Send final board state before resetting
+                    const fen = players.chess.fen();
+                    const history = players.chess.history({ verbose: true });
 
-                    players.chess.reset();
+                    // Emit board state to both players
+                    io.to(players.white).emit("boardState", fen, history);
+                    io.to(players.black).emit("boardState", fen, history);
+
+                    // Emit Checkmate event to both players
+                    io.to(players.white).emit("Checkmate", winner);
+                    io.to(players.black).emit("Checkmate", winner);
+
+                    // Reset after short delay to ensure frontend receives final state
+                    setTimeout(() => {
+                        players.chess.reset();
+                    }, 200);
                 }
+
                 else if (players.chess.isStalemate()) {
                     io.to(players.white).emit("Stalemate")
                     io.to(players.black).emit("Stalemate")
@@ -261,8 +273,8 @@ io.on("connection", (socket: Socket) => {
 
     // });
 
-    
+
 });
 server.listen(9000, () => {
-        console.log("Listening on port 9000");
- });
+    console.log("Listening on port 8000");
+});

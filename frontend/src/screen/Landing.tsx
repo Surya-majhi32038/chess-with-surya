@@ -108,7 +108,10 @@ const Landing = () => {
                                 </div>
                             </div> */}
 
-              <div className="bg-[#81B64C] hover:bg-[#A3D160] transition duration-300 mx-auto relative py-3 flex items-center justify-center shadow-lg w-full max-w-[400px] px-4 rounded-lg cursor-pointer before:absolute before:bottom-0 before:left-0 before:w-full before:h-1 before:bg-black/30 before:rounded-3xl ph:w-[90vw]">
+              <div
+               onClick={() => {
+                    navigate("/game");
+                  }} className="bg-[#81B64C] hover:bg-[#A3D160] transition duration-300 mx-auto relative py-3 flex items-center justify-center shadow-lg w-full max-w-[400px] px-4 rounded-lg cursor-pointer before:absolute before:bottom-0 before:left-0 before:w-full before:h-1 before:bg-black/30 before:rounded-3xl ph:w-[90vw]">
                 <img
                   src="/hand-with-chess.svg"
                   alt="hand with pawn icon"
@@ -116,9 +119,7 @@ const Landing = () => {
                 />
                 <div
                   className="text-left pl-4 bg-transparent"
-                  onClick={() => {
-                    navigate("/game");
-                  }}
+                  
                 >
                   <p className="font-bold bg-transparent ph:text-[24px] text-3xl">
                     Play Online

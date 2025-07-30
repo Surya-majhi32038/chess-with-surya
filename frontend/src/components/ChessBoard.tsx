@@ -4,6 +4,7 @@ import { Chess, Square } from "chess.js";
 import Modal from "./Modal";
 import CountdownTimer from "./CountdownTimer";
 import { toast } from "react-toastify";
+import { playSound } from "../utils/playSounds";
 // import AutoRefreshComponent from "./AutoRefreshComponent";
 
 const chess = new Chess();
@@ -25,18 +26,17 @@ const ChessBoard = () => {
   const socket = useRef<Socket | null>(null);
   const [board, setBoard] = useState(chess.board());
   const [playerRole, setPlayerRole] = useState<string | null>(null);
-//   const [sourceSquare, setSourceSquare] = useState<{
-//     row: number;
-//     col: number;
-//   } | null>(null);
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(
+    null
+  );
   const [ChessHistory, setChessHistory] = useState([]);
   const [timeCounter, settimeCounter] = useState(false);
   // let socket : Socket;
   useEffect(() => {
     // console.log("ChessBoard mounted", import.meta.env.VITE_SERVER_LOCAL_URL);
-    // http://localhost:9000/ http://localhost:9000/
+    //  http://localhost:9000/
     // Connect to backend ONLY when this page is mounted https://chess-with-surya.onrender.com/  ${import.meta.env.VITE_SERVER_LOCAL_URL}
-    socket.current = io(`https://chess-with-surya.onrender.com/`);
+    socket.current = io(`http://localhost:9000/`);
 
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
@@ -64,12 +64,23 @@ const ChessBoard = () => {
     // });
 
     socket.current?.on("boardState", (fen: string, arr: []) => {
-      console.log("boardState", fen, arr);
+      //   console.log("boardState", fen, arr);
+    //   console.log("ChessHistory", arr);
+      const lastMove:any | string = arr[arr.length - 1];
+      const isCapture = lastMove?.flags?.includes("c");
+    //   console.log("isCapture", isCapture);
+    //   console.log("lastMove", lastMove);
+      if (isCapture) {
+        playSound("../../public/sounds/capture.mp3");
+      } else {
+        playSound("../../public/sounds/move.mp3");
+      }
+     // playSound("../../public/sounds/move.mp3");
       settimeCounter(playerRole == chess.turn() ? true : false);
       // console.log("boardState->", arr);
       setChessHistory([]);
       setChessHistory(arr);
-    //   console.log("ChessHistory", ChessHistory);
+      //   console.log("ChessHistory", ChessHistory);
       chess.load(fen);
       setBoard([...chess.board()]);
     });
@@ -90,51 +101,49 @@ const ChessBoard = () => {
       setp1(`You are :${playerRole == "w" ? "WHITE" : "BLACK"}`);
       setp2("Let's Play");
       settimeCounter(playerRole == "w" ? true : false);
-
     });
 
-    socket.current?.on("Checkmate", () => {
-      if (playerRole == "w") {
-        chess.reset();
-        // toast.success("THE WHITE IS WINNER")
-        setShowModal(true);
-        seth1Tag(" WIN THE MATCH 🎉");
+    socket.current?.on("Checkmate", (winner) => {
+      setShowModal(true);
+        playSound("../../public/sounds/checkmate.mp3");
+      if (!playerRole) return;
+      const isWinner = playerRole === winner;
+
+      if (isWinner) {
+        seth1Tag("YOU WIN 🎉");
         setp1(
-          `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmated`
+          `Your opponent (${
+            playerRole === "white" ? "BLACK" : "WHITE"
+          }) is Checkmated`
         );
-        setp2("Play Again");
       } else {
-        chess.reset();
-        setShowModal(true);
-        seth1Tag("LOST THE MATCH 😢");
-        setp1(
-          `${playerRole == "w" ? "BLACK" : "WHITE"} is Checkmated`
-        );
-        setp2("Play Again");
-        // toast.success("THE BLACK IS WINNER")
+        seth1Tag("YOU LOST 😢");
+        setp1(`You (${playerRole.toUpperCase()}) are Checkmated`);
       }
-    //   setBoard([...chess.board()]);
+
+      setp2("Play Again");
+      settimeCounter(false);
     });
     socket.current?.on("Stalemate", () => {
       // toast.info("Stalemate type of Draw")
       chess.reset();
       setShowModal(true);
-        seth1Tag(" THE MATCH IS TIE");
-        setp1(" No legal moves available and no check – it's a tie!");
-        setp2("Reconnecting");
+      seth1Tag(" THE MATCH IS TIE");
+      setp1(" No legal moves available and no check – it's a tie!");
+      setp2("Reconnecting");
       setBoard(chess.board());
     });
 
     socket.current?.on("GameIsDraw", () => {
       chess.reset();
       setShowModal(true);
-        seth1Tag(" THE MATCH IS TIE");
-        setp1(" No legal moves available and no check – it's a tie!");
-        setp2("Reconnecting");
+      seth1Tag(" THE MATCH IS TIE");
+      setp1(" No legal moves available and no check – it's a tie!");
+      setp2("Reconnecting");
       setBoard(chess.board());
     });
     return () => {
-      socket.current?.off("playersRole", handlePlayersRole); 
+      socket.current?.off("playersRole", handlePlayersRole);
       socket.current?.off("spectatorRole");
       socket.current?.off("boardState");
       socket.current?.off("move");
@@ -180,7 +189,9 @@ const ChessBoard = () => {
       to: `${String.fromCharCode(97 + target.col)}${8 - target.row}` as Square,
       //   promotion: "q",
     };
+    setLastMove({ from: move.from, to: move.to }); // or whatever the move is
     socket.current?.emit("move", move);
+    // playSound("../../public/sounds/move.mp3");
     settimeCounter(false);
   };
 
@@ -222,8 +233,6 @@ const ChessBoard = () => {
 
   // this is for phone
 
-
-
   function handleSquareClick(row: number, col: number) {
     const file = "abcdefgh"[col];
     const rank = 8 - row;
@@ -255,12 +264,24 @@ const ChessBoard = () => {
       });
       console.log(destinations);
 
-// add green live but not tested from chatGPT
+      // add green live but not tested from chatGPT
       if (destinations.length > 0) {
         setSourceSquares({ row, col });
         setValidMoves(destinations);
       }
     }
+  }
+  function isLastMovedPiece(rowIndex: any, colIndex: any, lastMove: any) {
+    if (!lastMove) return false;
+
+    const coordsToAlgebraic = (row: any, col: any) => {
+      const file = String.fromCharCode(97 + col); // 'a' to 'h'
+      const rank = 8 - row; // row 0 = rank 8
+      return file + rank;
+    };
+
+    const square = coordsToAlgebraic(rowIndex, colIndex);
+    return square === lastMove.to;
   }
 
   if (showConnecting) return <div> Connectiong....</div>;
@@ -297,24 +318,7 @@ const ChessBoard = () => {
                                 : ""
                             }
                             `}
-                    //   onDragOver={(e: React.DragEvent<HTMLDivElement>) =>
-                    //     e.preventDefault()
-                    //   }
                       onClick={() => handleSquareClick(rowIndex, squareIndex)}
-                    //   onDrop={(e: React.DragEvent<HTMLDivElement>) => {
-                    //     e.preventDefault();
-                    //     // if (sourceSquare) {
-                    //     //   handleMove(sourceSquare, {
-                    //     //     row: rowIndex,
-                    //     //     col: squareIndex,
-                    //     //   });
-                    //     //   // console.log("player color :",playerRole,sourceSquare, "sourceSquare",{
-                    //     //   //     row: rowIndex,
-                    //     //   //     col: squareIndex,
-                    //     //   //   });
-                    //     //   setSourceSquare(null);
-                    //     // }
-                    //   }}
                     >
                       {/* this part is for number and alphabat */}
                       {playerRole == null ? null : playerRole === "b" ? (
@@ -411,20 +415,23 @@ const ChessBoard = () => {
                               : `${square?.type?.toUpperCase()} copy`
                           }.png`}
                           alt={square.type}
-                          className={`piece ${
-                            square.color === "w" ? "white" : "black"
-                          } w-full ${
-                            square?.type === "p"
-                              ? `py-3 px-4 ph:py-[3px] ph:px-[6px]`
-                              : `${
-                                  square?.type === "k"
-                                    ? `py-2 px-1 ph:px-[4px] ph:py-[4px]`
-                                    : `py-2 px-3 ph:px-[5px] ph:py-[4px]`
-                                }`
-                          } h-full bg-transparent ${
-                            playerRole === "w" ? "" : "rotate-180"
-                          }`}
-                     
+                          className={`
+                            w-full h-full bg-transparent 
+                            ${playerRole === "w" ? "" : "rotate-180"} 
+                            transition-transform duration-300 ease-in-out
+                            ${
+                              isLastMovedPiece(rowIndex, squareIndex, lastMove)
+                                ? "animate-piece "
+                                : ""
+                            }
+                            ${
+                              square?.type === "p"
+                                ? `py-3 px-4 ph:py-[3px] ph:px-[6px]`
+                                : square?.type === "k"
+                                ? `py-2 px-1 ph:px-[4px] ph:py-[4px]`
+                                : `py-2 px-3 ph:px-[5px] ph:py-[4px]`
+                            }
+                            `}
                         />
                       )}
                     </div>
@@ -470,6 +477,8 @@ const ChessBoard = () => {
             p1={p1}
             p2={p2}
             onClose={() => {
+                if(p2 == "Let's Play" || p2 == "Play Again") {
+              playSound("../../public/sounds/gameStart.mp3"); }
               setShowModal(false);
               if (p2 == "Reconnecting") {
                 setshowConnecting(true);
