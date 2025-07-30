@@ -10,7 +10,7 @@ import { playSound } from "../utils/playSounds";
 const chess = new Chess();
 
 const ChessBoard = () => {
-  console.log("chessBoard");
+//   console.log("chessBoard");
   const [sourceSquares, setSourceSquares] = useState<null | {
     row: number;
     col: number;
@@ -125,11 +125,11 @@ const ChessBoard = () => {
       settimeCounter(false);
     });
     socket.current?.on("Stalemate", () => {
-      // toast.info("Stalemate type of Draw")
+      playSound("../../public/sounds/game over (statlemate).mp3");
       chess.reset();
       setShowModal(true);
       seth1Tag(" THE MATCH IS TIE");
-      setp1(" No legal moves available and no check – it's a tie!");
+      setp1(" No legal moves available and no check - it's a tie!");
       setp2("Reconnecting");
       setBoard(chess.board());
     });
@@ -157,8 +157,9 @@ const ChessBoard = () => {
   }, [ChessHistory]);
 
   socket.current?.on("opponetGone", () => {
+    playSound("../../public/sounds/game over.mp3");
     seth1Tag("YOU WIN THE MATCH");
-    setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"} Left ⚠️  `);
+    setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"}Left ⚠️`);
     setp2("Reconnecting");
     setShowModal(true);
     console.log("show modal ", showModal);
@@ -170,7 +171,8 @@ const ChessBoard = () => {
   });
 
   socket.current?.on("TimeUp", (role: string) => {
-    console.log("TimeUp", role);
+    // console.log("TimeUp", role);
+    playSound("../../public/sounds/game over.mp3");
     setShowModal(true);
     seth1Tag("YOU WIN THE MATCH");
     setp1(`your opponent ${role} is Time Up`);
@@ -284,7 +286,7 @@ const ChessBoard = () => {
     return square === lastMove.to;
   }
 
-  if (showConnecting) return <div> Connectiong....</div>;
+  if (showConnecting) return <div className="text-gray-300 ph:text-xl text-2xl"> Searching for an opponent...</div>;
 
   return (
     <div className="flex gap-7 ph:overflow-auto  no-scrollbar ph:mt-4 ph:flex-col ">

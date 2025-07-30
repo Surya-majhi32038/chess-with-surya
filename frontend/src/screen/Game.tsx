@@ -8,7 +8,7 @@ const Game = () => {
      const [isOpen, setIsOpen] = useState(false);
  
   return (
-    <div className="flex  items-center ph:flex-col lg:h-screen">
+    <div className="flex  items-center ph:h-screen ph:flex-col lg:h-screen">
          {/* head for phone  */}
         <div className=" md:hidden sticky ph:left-0 top-0 flex justify-between p-1">
           <div className=" flex justify-between gap-1">
@@ -52,7 +52,7 @@ const Game = () => {
         <div className="mr-auto ph:hidden h-full sticky top-0 ">
           <Header />
         </div>
-        <div className=" w-full h-full ph:flex-none flex flex-col justify-center items-center">
+        <div className=" w-full h-full ph:flex-none  flex flex-col justify-center items-center">
 
             <ChessBoard /> 
         

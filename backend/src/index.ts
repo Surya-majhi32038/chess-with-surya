@@ -141,7 +141,7 @@ io.on("connection", (socket: Socket) => {
     );
 
     socket.on("move", (move: any) => {
-        //  console.log("after every movement ", Games)
+         console.log("after every movement print games array -> ", Games)
         let players: any;
         players = Games.find(p => p.black === socket.id || p.white === socket.id);
         // console.log("move received:", move);
@@ -252,27 +252,6 @@ io.on("connection", (socket: Socket) => {
             // }
         }
     })
-    // socket.on("reStartGame", (socketId1, socketId2) => {
-
-
-    //     const players = new PlayersClass(socketId1, socketId2);
-    //     Games.push(players);
-    //     io.to(players.black).emit("playersRole", "b");
-    //     io.to(players.white).emit("playersRole", "w");
-    //     // Games.push(players)
-    //     if (players.white && players.black) {
-    //         // console.log("here")
-    //         io.to(players.black).emit("startGame");
-    //         io.to(players.white).emit("startGame");
-    //         // io.to(players.black).emit("printGames", Games);
-    //         // io.to(players.white).emit("printGames", Games);
-    //     }
-    //     // console.log("sending black role to player ", socket.id);
-    //     // }
-
-
-    // });
-
 
 });
 server.listen(9000, () => {
