@@ -480,7 +480,7 @@ const ChessBoard = () => {
             p2={p2}
             onClose={() => {
                 if(p2 == "Let's Play" || p2 == "Play Again") {
-              playSound("../../public/sounds/gameStart.mp3"); }
+              playSound("/sounds/gameStart.mp3"); }
               setShowModal(false);
               if (p2 == "Reconnecting") {
                 setshowConnecting(true);
