@@ -50,7 +50,6 @@ pendingUser = null
 let currentPlayers: "w" | "b" = "w";
 io.on("connection", (socket: Socket) => {
     console.log("New client connected:", socket.id);
-    console.log("Games array on connection -> ", Games);
     /**
      * 1.find the game in the Games array which is one player 
      * 2.if the game is found, check if the player is white or black
@@ -60,13 +59,14 @@ io.on("connection", (socket: Socket) => {
      * 6.if there is no pending user, set the pending user to the socket.id and emit the "playersRole" event with "w"
      * 7.if there is a pending user, create a new game with the pending user and the socket.id, push it to the Games array and emit the "playersRole" event with "b"
      * 
-     */
+    */
+   
+   const player = Games.find(game =>
+    (game.white && !game.black) || (!game.white && game.black)
+);
 
-    const player = Games.find(game =>
-        (game.white && !game.black) || (!game.white && game.black)
-    );
-
-    if (player) { // if any players are in the game(white or black)
+if (player) { // if any players are in the game(white or black)
+  
         // console.log("i'm in player")
         if (player.white) {
             player.black = socket.id;
@@ -98,6 +98,7 @@ io.on("connection", (socket: Socket) => {
 
         }
     }
+      console.log("Games array on connection -> ", Games);
 
     socket.on("disconnect", () => {
         /**
