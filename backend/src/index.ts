@@ -8,11 +8,18 @@ import path from "path";
 // console.log("i'm in backend ");
 const app = express();
 const server = createServer(app);
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://chess-with-surya-1-frontend.onrender.com"
+];
+
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-    },
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"]
+  }
 });
+
 // GET / route
 app.get('/', (req: any, res: any) => {
     res.send({
@@ -255,5 +262,5 @@ io.on("connection", (socket: Socket) => {
 
 });
 server.listen(9000, () => {
-    console.log("Listening on port 8000");
+    console.log("Listening on port 9000");
 });

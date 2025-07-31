@@ -148,35 +148,43 @@ const ChessBoard = () => {
   });
 
   // when a ChessHistry is changed
-  useEffect(() => {
-    //console.log("ChessHistory changed:", ChessHistory);
-    //setChessHistory(ChessHistory);
-  }, [ChessHistory]);
+ 
 
-  socket.current?.on("opponetGone", () => {
+  useEffect(() => {
+  if (!socket.current) return;
+
+  const socketInstance = socket.current;
+
+  socketInstance.on("opponetGone", () => {
     playSound("/sounds/game over.mp3");
     seth1Tag("YOU WIN THE MATCH");
-    setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"}Left ⚠️`);
+    setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"} Left ⚠️`);
     setp2("Reconnecting");
     setShowModal(true);
     console.log("show modal ", showModal);
-    // settimeCounter(false);
   });
-  // only for testing purpose
-  socket.current?.on("checkGamesArray", (game: []) => {
+
+  socketInstance.on("checkGamesArray", (game: []) => {
     console.log("Games array ", game);
   });
 
-  socket.current?.on("TimeUp", (role: string) => {
-    // console.log("TimeUp", role);
+  socketInstance.on("TimeUp", (role: string) => {
     playSound("/sounds/game over.mp3");
     setShowModal(true);
     seth1Tag("YOU WIN THE MATCH");
     setp1(`your opponent ${role} is Time Up`);
     setp2("Reconnecting");
     settimeCounter(false);
-    // setShowModal(false);
   });
+
+  // Optional cleanup
+  return () => {
+    socketInstance.off("opponetGone");
+    socketInstance.off("checkGamesArray");
+    socketInstance.off("TimeUp");
+  };
+}, []);
+
   const handleMove = (
     source: { row: number; col: number },
     target: { row: number; col: number }
