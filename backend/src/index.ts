@@ -49,7 +49,8 @@ let pendingUser: string | null;
 pendingUser = null
 let currentPlayers: "w" | "b" = "w";
 io.on("connection", (socket: Socket) => {
-
+    console.log("New client connected:", socket.id);
+    console.log("Games array on connection -> ", Games);
     /**
      * 1.find the game in the Games array which is one player 
      * 2.if the game is found, check if the player is white or black
