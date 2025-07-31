@@ -34,7 +34,7 @@ const ChessBoard = () => {
   // let socket : Socket;
   useEffect(() => {
   
-    socket.current = io(`http://localhost:9000/`); //   https://chess-with-surya.onrender.com/
+    socket.current = io(`${import.meta.env.VITE_SERVER_URL}`); //   https://chess-with-surya.onrender.com/
     socket.current.on("connect", () => {
       // console.log("Connected to socket:", socket?.id);
     });
