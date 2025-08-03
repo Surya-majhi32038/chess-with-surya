@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { io, Socket } from "socket.io-client";
+// import { io, Socket } from "socket.io-client";
 import { Chess, Square } from "chess.js";
 import Modal from "./Modal";
 import CountdownTimer from "./CountdownTimer";
 import { toast } from "react-toastify";
 import { playSound } from "../utils/playSounds";
+import socket from "./socket";
 // import AutoRefreshComponent from "./AutoRefreshComponent";
 
 const chess = new Chess();
 
 const ChessBoard = () => {
-//   console.log("chessBoard");
+  //   console.log("chessBoard");
   const [sourceSquares, setSourceSquares] = useState<null | {
     row: number;
     col: number;
@@ -23,105 +24,125 @@ const ChessBoard = () => {
   const [h1Tag, seth1Tag] = useState("");
   const [p1, setp1] = useState("");
   const [p2, setp2] = useState("");
-  const socket = useRef<Socket | null>(null);
+//   const socket = useRef<Socket | null>(null);
   const [board, setBoard] = useState(chess.board());
-  const [playerRole, setPlayerRole] = useState<string | null>(null);
+  const playerRoleRef = useRef<string | null>(null);
+
+  const [playerRole,setplayerRole] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(
     null
   );
   const [ChessHistory, setChessHistory] = useState([]);
   const [timeCounter, settimeCounter] = useState(false);
   // let socket : Socket;
-  useEffect(() => {
-  
-    socket.current = io(`${import.meta.env.VITE_SERVER_URL}`); //   https://chess-with-surya.onrender.com/
-    socket.current.on("connect", () => {
-      // console.log("Connected to socket:", socket?.id);
+   useEffect(() => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    socket.on("connect", () => {
+      console.log("Connected to socket:", socket.id);
     });
 
-    // Clean up when leaving the page
     return () => {
-      socket.current?.disconnect();
-      console.log("Socket disconnected");
+      socket.disconnect();
+      console.log("Socket disconnected on leaving /game");
     };
   }, []);
+  useEffect(() => {
+    playerRoleRef.current = playerRole;
+  }, [playerRole]);
 
+  // test playerRoleRef.current
+//   useEffect(() => {
+//     console.log("playerRoleRef.current", playerRo);
+//   }, [playerRoleRef.current]);
   useEffect(() => {
     const handlePlayersRole = (role: string) => {
       console.log("role", role);
-      setPlayerRole(role);
+      setplayerRole(role);
       setBoard([...chess.board()]);
     };
     // alert("alert")
-    socket.current?.on("playersRole", handlePlayersRole);
-    // socket.current?.on("playersRole", (role: string) => {
+    socket?.on("playersRole", handlePlayersRole);
+    // socket?.on("playersRole", (role: string) => {
     //   setPlayerRole(role);
 
     //   setBoard([...chess.board()]);
     // });
-
-    socket.current?.on("boardState", (fen: string, arr: []) => {
+ // first game is stop at first time 
+    socket.on("boardState", (fen: string, arr: []) => {
       //   console.log("boardState", fen, arr);
-    //   console.log("ChessHistory", arr);
-      const lastMove:any | string = arr[arr.length - 1];
+      //   console.log("ChessHistory", arr);
+      const lastMove: any | string = arr[arr.length - 1];
       const isCapture = lastMove?.flags?.includes("c");
-    //   console.log("isCapture", isCapture);
-    //   console.log("lastMove", lastMove);
+      //   console.log("isCapture", isCapture);
+      //   console.log("lastMove", lastMove);
       if (isCapture) {
         playSound("/sounds/capture.mp3");
       } else {
         playSound("/sounds/move.mp3");
       }
-     // playSound("../../public/sounds/move.mp3");
-      settimeCounter(playerRole == chess.turn() ? true : false);
+      // playSound("../../public/sounds/move.mp3");
+      settimeCounter(playerRoleRef.current == chess.turn() ? true : false);
       // console.log("boardState->", arr);
-      setChessHistory([]);
+      //   setChessHistory([]);
       setChessHistory(arr);
       //   console.log("ChessHistory", ChessHistory);
       chess.load(fen);
       setBoard([...chess.board()]);
     });
-    socket.current?.on("move", (move: { from: Square; to: Square }) => {
-      chess.move(move);
+    socket?.on("move", (move: { from: Square; to: Square }) => {
+      const change = chess.move(move);
+        if (!change) {
+            console.error("Invalid move:", move);
+            return;
+        }
       setBoard([...chess.board()]);
     });
     // to print the whole game
-    socket.current?.on("printGames", (game: []) => {
-      console.log("Games array ", game);
-    });
-    socket.current?.on("startGame", () => {
+    socket?.on("startGame", () => {
+  
       // toast.success("Start Game")
+      chess.reset();
+      setBoard(chess.board());
+      setChessHistory([]);
+      setLastMove(null);
+      setValidMoves([]);
+      setSourceSquares(null);
+      setshowConnecting(false);
       setshowConnecting(!showConnecting);
+      console.log("startGame playerRoleRef.currentRef.current", playerRoleRef.current);
       // console.log(showConnecting);
       setShowModal(true);
       seth1Tag("WELCOME TO OUR GAME");
-      setp1(`You are :${playerRole == "w" ? "WHITE" : "BLACK"}`);
+      setp1(`You are :${playerRoleRef.current == "w" ? "WHITE" : "BLACK"}`);
       setp2("Let's Play");
-      settimeCounter(playerRole == "w" ? true : false);
+      settimeCounter(playerRoleRef.current == "w" ? true : false);
     });
 
-    socket.current?.on("Checkmate", (winner) => {
+    socket?.on("Checkmate", (winner) => {
       setShowModal(true);
-        playSound("/sounds/checkmate.mp3");
-      if (!playerRole) return;
-      const isWinner = playerRole === winner;
+      playSound("/sounds/checkmate.mp3");
+      if (!playerRoleRef.current) return;
+      const isWinner = playerRoleRef.current === winner;
 
       if (isWinner) {
         seth1Tag("YOU WIN 🎉");
-        setp1(
-          `Your opponent (${
-            playerRole === "white" ? "BLACK" : "WHITE"
-          }) is Checkmated`
-        );
+        setp1(`
+          Your opponent (${
+            playerRoleRef.current === "white" ? "BLACK" : "WHITE"
+          }) is Checkmated
+        `);
       } else {
         seth1Tag("YOU LOST 😢");
-        setp1(`You (${playerRole.toUpperCase()}) are Checkmated`);
+        setp1(`You (${playerRoleRef.current === "white" ? "BLACK" : "WHITE"}) are Checkmated`);
       }
 
       setp2("Play Again");
       settimeCounter(false);
     });
-    socket.current?.on("Stalemate", () => {
+    socket?.on("Stalemate", () => {
       playSound("/sounds/game over (statlemate).mp3");
       chess.reset();
       setShowModal(true);
@@ -131,7 +152,7 @@ const ChessBoard = () => {
       setBoard(chess.board());
     });
 
-    socket.current?.on("GameIsDraw", () => {
+    socket?.on("GameIsDraw", () => {
       chess.reset();
       setShowModal(true);
       seth1Tag(" THE MATCH IS TIE");
@@ -140,50 +161,47 @@ const ChessBoard = () => {
       setBoard(chess.board());
     });
     return () => {
-      socket.current?.off("playersRole", handlePlayersRole);
-      socket.current?.off("spectatorRole");
-      socket.current?.off("boardState");
-      socket.current?.off("move");
+      socket?.off("playersRole", handlePlayersRole);
+      socket?.off("spectatorRole");
+      socket?.off("boardState");
+      socket?.off("move");
     };
-  });
-
-  // when a ChessHistry is changed
- 
-
+  }, []);
   useEffect(() => {
-  if (!socket.current) return;
+    if (!socket) return;
 
-  const socketInstance = socket.current;
+    const socketInstance = socket;
 
-  socketInstance.on("opponetGone", () => {
-    playSound("/sounds/game over.mp3");
-    seth1Tag("YOU WIN THE MATCH");
-    setp1(`your Opponent ${playerRole == "w" ? "BLACK" : "WHITE"} Left ⚠️`);
-    setp2("Reconnecting");
-    setShowModal(true);
-    console.log("show modal ", showModal);
-  });
+    socketInstance.on("opponetGone", () => {
+      console.log("opponetGone");
+      playSound("/sounds/game over.mp3");
+      seth1Tag("YOU WIN THE MATCH");
+      setp1(`your Opponent ${playerRoleRef.current == "w" ? "BLACK" : "WHITE"} Left ⚠️`);
+      setp2("Reconnecting");
+      setShowModal(true);
+      console.log("show modal ", showModal);
+    });
 
-  socketInstance.on("checkGamesArray", (game: []) => {
-    console.log("Games array ", game);
-  });
+    socketInstance.on("checkGamesArray", (game: []) => {
+      console.log("Games array ", game);
+    });
 
-  socketInstance.on("TimeUp", (role: string) => {
-    playSound("/sounds/game over.mp3");
-    setShowModal(true);
-    seth1Tag("YOU WIN THE MATCH");
-    setp1(`your opponent ${role} is Time Up`);
-    setp2("Reconnecting");
-    settimeCounter(false);
-  });
+    socketInstance.on("TimeUp", (role: string) => {
+      playSound("/sounds/game over.mp3");
+      setShowModal(true);
+      seth1Tag("YOU WIN THE MATCH");
+      setp1(`your opponent ${role} is Time Up`);
+      setp2("Reconnecting");
+      settimeCounter(false);
+    });
 
-  // Optional cleanup
-  return () => {
-    socketInstance.off("opponetGone");
-    socketInstance.off("checkGamesArray");
-    socketInstance.off("TimeUp");
-  };
-}, []);
+    // Optional cleanup
+    return () => {
+      socketInstance.off("opponetGone");
+      socketInstance.off("checkGamesArray");
+      socketInstance.off("TimeUp");
+    };
+  }, []);
 
   const handleMove = (
     source: { row: number; col: number },
@@ -197,7 +215,8 @@ const ChessBoard = () => {
       //   promotion: "q",
     };
     setLastMove({ from: move.from, to: move.to }); // or whatever the move is
-    socket.current?.emit("move", move);
+    socket?.emit("move", move);
+    console.log("move", move);
     // playSound("../../public/sounds/move.mp3");
     settimeCounter(false);
   };
@@ -206,13 +225,13 @@ const ChessBoard = () => {
   const reConnect = () => {
     chess.reset();
     setBoard(chess.board());
-    socket.current?.emit("reConnect");
+    socket?.emit("reConnect");
   };
   const undoHandler = () => {
     console.log("undoHandler");
-    socket.current?.emit("undoMove");
+    socket?.emit("undoMove");
   };
-  //   console.log(playerRole, "playerRole");
+  //   console.log(playerRoleRef.current, "playerRoleRef.current");
   useEffect(() => {
     const handleInvalidMove = (rote: any) => {
       console.log("Invalid move for role:", rote);
@@ -221,16 +240,16 @@ const ChessBoard = () => {
       );
     };
 
-    socket.current?.on("Invalidmove", handleInvalidMove);
+    socket?.on("Invalidmove", handleInvalidMove);
 
     return () => {
-      socket.current?.off("Invalidmove", handleInvalidMove);
+      socket?.off("Invalidmove", handleInvalidMove);
     };
   }, []);
 
   const handleTimeUp = () => {
     // setMessage("⏰ You lost! Time's up!");
-    socket.current?.emit("timeUp", playerRole);
+    socket?.emit("timeUp", playerRoleRef.current);
     setShowModal(true);
     seth1Tag("YOU LOSS THE MATCH");
     setp1(`Reason : Time Up`);
@@ -269,7 +288,7 @@ const ChessBoard = () => {
           col: "abcdefgh".indexOf(toFile),
         };
       });
-      console.log(destinations);
+      // console.log(destinations);
 
       // add green live but not tested from chatGPT
       if (destinations.length > 0) {
@@ -291,7 +310,13 @@ const ChessBoard = () => {
     return square === lastMove.to;
   }
 
-  if (showConnecting) return <div className="text-gray-300 ph:text-xl text-2xl"> Searching for an opponent...</div>;
+  if (showConnecting)
+    return (
+      <div className="text-gray-300 ph:text-xl text-2xl">
+        {" "}
+        Searching for an opponent...
+      </div>
+    );
 
   return (
     <div className="flex gap-7 ph:overflow-auto  no-scrollbar ph:mt-4 ph:flex-col ">
@@ -299,7 +324,7 @@ const ChessBoard = () => {
         {/* main board */}
         <div
           className={`text-black rounded-md ph:px-1  ${
-            playerRole === "w" ? "" : "rotate-180"
+            playerRoleRef.current === "w" ? "" : "rotate-180"
           } p-2 ph:p-0`}
         >
           {board.map((row, rowIndex) => {
@@ -328,7 +353,7 @@ const ChessBoard = () => {
                       onClick={() => handleSquareClick(rowIndex, squareIndex)}
                     >
                       {/* this part is for number and alphabat */}
-                      {playerRole == null ? null : playerRole === "b" ? (
+                      {playerRoleRef.current == null ? null : playerRoleRef.current === "b" ? (
                         squareIndex == 7 ? (
                           <>
                             <p
@@ -372,7 +397,7 @@ const ChessBoard = () => {
                             {String.fromCharCode(97 + squareIndex)}
                           </p>
                         ) : null
-                      ) : // run when playerRole is white
+                      ) : // run when playerRoleRef.current is white
 
                       squareIndex == 0 ? (
                         <>
@@ -424,7 +449,7 @@ const ChessBoard = () => {
                           alt={square.type}
                           className={`
                             w-full h-full bg-transparent 
-                            ${playerRole === "w" ? "" : "rotate-180"} 
+                            ${playerRoleRef.current === "w" ? "" : "rotate-180"} 
                             transition-transform duration-300 ease-in-out
                             ${
                               isLastMovedPiece(rowIndex, squareIndex, lastMove)
@@ -451,15 +476,15 @@ const ChessBoard = () => {
         <div className="flex justify-between ph:flex-col ph:gap-5 items-center mt-4">
           <div className="flex items-center gap-6">
             <p className="text-white ph:text-xl text-2xl">
-              Your are : {playerRole == "w" ? "White" : "Black"}
+              Your are : {playerRoleRef.current == "w" ? "White" : "Black"}
             </p>
             <img
               src={`profile-picture-${
-                playerRole == "w" ? "white" : "black"
+                playerRoleRef.current == "w" ? "white" : "black"
               }.png`}
               alt=""
               className={`h-14 ph:h-8 ph:w-8 ${
-                playerRole == "w"
+                playerRoleRef.current == "w"
                   ? "bg-[#4d4948] border-red-100"
                   : "bg-[] border-[#4d4948]"
               } p-1 border  w-auto`}
@@ -484,8 +509,9 @@ const ChessBoard = () => {
             p1={p1}
             p2={p2}
             onClose={() => {
-                if(p2 == "Let's Play" || p2 == "Play Again") {
-              playSound("/sounds/gameStart.mp3"); }
+              if (p2 == "Let's Play" || p2 == "Play Again") {
+                playSound("/sounds/gameStart.mp3");
+              }
               setShowModal(false);
               if (p2 == "Reconnecting") {
                 setshowConnecting(true);
@@ -495,7 +521,7 @@ const ChessBoard = () => {
                 chess.reset();
                 setBoard(chess.board());
                 setChessHistory([]);
-                // socket.current?.emit("reStartGame");
+                // socket?.emit("reStartGame");
               }
             }}
           />

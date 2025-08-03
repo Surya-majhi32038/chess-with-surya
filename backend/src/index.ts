@@ -4,20 +4,24 @@ const express = require("express");
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { Chess } from "chess.js";
+import dotenv from "dotenv";
 import path from "path";
+const GameModel = require("./database/GameModel.js");
+const { connectDB } = require("./database/connectDB.js");
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 // console.log("i'm in backend ");
 const app = express();
 const server = createServer(app);
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://chess-with-surya-1-frontend.onrender.com"
+    "http://localhost:5173",
+    "https://chess-with-surya-1-frontend.onrender.com"
 ];
-
+connectDB();
 const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"]
-  }
+    cors: {
+        origin: allowedOrigins,
+        methods: ["GET", "POST"]
+    }
 });
 
 // GET / route
@@ -25,196 +29,198 @@ app.get('/', (req: any, res: any) => {
     res.send({
         activeStatus: true,
         error: false
-    });
+    }); 
 });
 
-class PlayersClass {
-    public white: string;
-    public black: string;
-    public chess: Chess;
 
-    constructor(white: string, black: string) {
-        this.white = white
-        this.black = black
-        this.chess = new Chess();
-    }
-}
-let Games: PlayersClass[] = [];
+let game = {
+    chess: null as Chess | null,
+    players: { white: null as string | null, black: null as string | null },
+};
 
+io.on("connection", async (socket: Socket) => {
+    // await GameModel.deleteAll(); // Clear all games at the start of a new connection
+    console.log("Player connected:", socket.id);
 
-// check it "init_game"
+    // Try to join or create game
+    const existingGame = await GameModel.findOne({ status: "waiting" });
 
-// console.log("when the backend is start and Games array -> ", Games)
-let pendingUser: string | null;
-pendingUser = null
-let currentPlayers: "w" | "b" = "w";
-io.on("connection", (socket: Socket) => {
-    console.log("New client connected:", socket.id);
-    /**
-     * 1.find the game in the Games array which is one player 
-     * 2.if the game is found, check if the player is white or black
-     * 3.if the player is white, set the black player to the socket.id
-     * 4. same as white
-     * 5.if the game is not found, check if there is a pending user
-     * 6.if there is no pending user, set the pending user to the socket.id and emit the "playersRole" event with "w"
-     * 7.if there is a pending user, create a new game with the pending user and the socket.id, push it to the Games array and emit the "playersRole" event with "b"
-     * 
-    */
-   
-   const player = Games.find(game =>
-    (game.white && !game.black) || (!game.white && game.black)
-);
-
-if (player) { // if any players are in the game(white or black)
-  
-        // console.log("i'm in player")
-        if (player.white) {
-            player.black = socket.id;
-            socket.emit("playersRole", "b");
-        } else {
-            player.white = socket.id;
-            socket.emit("playersRole", "w");
-        }
-        io.to(player.black).emit("startGame");
-        io.to(player.white).emit("startGame");
+    if (!existingGame) {
+        const newGame = await GameModel.create({ white: socket.id });
+        // game.chess = new Chess();
+        game.players.white = socket.id;
+        socket.emit("playersRole", "w");
+        console.log("White joined:", socket.id);
     } else {
-        if (!pendingUser) {
-            pendingUser = socket.id
+        if (existingGame.black) {
+            existingGame.white = socket.id;
+            game.players.white = socket.id;
             socket.emit("playersRole", "w");
-            // console.log("sending white role to player ", socket.id);
-        } else {
-            const players = new PlayersClass(pendingUser, socket.id);
-            pendingUser = null;
-            Games.push(players);
-            // console.log("New game created with players, games status", Games);
-            // console.log("Games array ",Games)
+        } else if(existingGame.white && !existingGame.black) {
+            existingGame.black = socket.id;
+            game.players.black = socket.id;
             socket.emit("playersRole", "b");
-            // Games.push(players)
-            if (players.white && players.black) {
-                // console.log("here")
-                io.to(players.black).emit("startGame");
-                io.to(players.white).emit("startGame");
-            }
-
+            console.log("Black joined:", socket.id);
         }
+        game.chess = new Chess();
+        existingGame.status = "ongoing";
+        await existingGame.save();
+        io.to(game.players.white!).emit("startGame");
+        io.to(game.players.black!).emit("startGame");
     }
-      console.log("Games array on connection -> ", Games);
 
-    socket.on("disconnect", () => {
-        /**
-         * 1. find the player in the Games array which is connected with the socket.id
-         * 2. if the player is found, check if the player is white or black
-         * 3. if the player is white, emit the "opponetGone" event to the black player
-         * 4. same as white
-         * 5. remove the whole game from the Games array
-         * 
-         * 
-         */
-        const players = Games.find(p => p.black === socket.id || p.white === socket.id);
-        if (!players) {
-            console.warn("No matching player found on disconnect:", socket.id);
-            return;
-        }
-
-        //    console.log(players)
-        // players?.chess?.reset();
-
-        if (socket.id === players?.white) {
-            // players.white = ""
-            // io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
-            io.to(players.black).emit("opponetGone");
-
-        } else {
-            // players.black = ""
-            // io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
-            io.to(players.white).emit("opponetGone");
-        }
-        Games = Games.filter(game => {
-            return game.white !== socket.id && game.black !== socket.id;
+    // Handle disconnect
+    socket.on("disconnect", async () => {
+        console.log("Disconnected:", socket.id);
+        console.log("Current game state:", game);
+        const findGame = await GameModel.findOne({
+            $or: [
+                { white: socket.id },
+                { black: socket.id }
+            ]
         });
-        console.log("Player disconnected:", socket.id);
-        console.log("Games array after disconnect", Games);
+        if (socket.id === findGame?.white) {
+            console.log("White player disconnected, resetting game state.");
+            game.chess = null; // Reset chess instance
+            game.players.white = null; // Reset white player
+            /// find the game 
+
+            console.log("findGame -> ", findGame); //
+            if (findGame.black == "") {
+                console.log("No black player found, deleting game. -- findGame.black -> ", findGame.black, " !findGame.black -> ", !findGame.black);
+                console.log("No black player found, deleting game.");
+                await GameModel.findOneAndDelete({ white: socket.id });
+                game.players.black = null; // Reset black player
+            } else {
+                findGame.white = "";
+                findGame.status = "waiting";
+                game.players.black = findGame.black; // Reset black player
+                await findGame.save();
+                io.to(findGame.black!).emit("opponetGone");
+                console.log("White player disconnected, waiting for black player to reconnect.(opponentGone)", game.players.black);
+            }
+        } else if (socket.id === findGame?.black) {
+            game.chess = null; // Reset chess instance
+            game.players.black = null; // Reset black player
+
+
+            // console.log("findGame -> ", findGame.white);
+            if (findGame.white == "") {
+                await GameModel.findOneAndDelete({ black: socket.id });
+                game.players.white = null; // Reset white player
+            } else {
+                game.players.white = findGame.white; // Reset black player
+                findGame.black = "";
+                findGame.status = "waiting";
+                await findGame.save();
+                io.to(findGame.white!).emit("opponetGone");
+                console.log("balck player disconnected, waiting for white player to reconnect.(opponentGone)", game.players.white);
+            }
+        }
+
+        //game = { chess: null, players: { white: null, black: null } };
+
     });
+
 
 
 
     socket.on("timeUp", () => {
-        let players: any;
-        players = Games.find(p => p.black === socket.id || p.white === socket.id);
-        if (socket.id === players?.white) {
-            io.to(players.black).emit("TimeUp", "white");
+
+        if (socket.id === game.players.white!) {
+            io.to(game.players.black!).emit("TimeUp", "white");
         } else {
-            io.to(players.white).emit("TimeUp", "balck");
+            io.to(game.players.white!).emit("TimeUp", "balck");
         }
     }
     );
 
-    socket.on("move", (move: any) => {
-         console.log("after every movement print games array -> ", Games)
-        let players: any;
-        players = Games.find(p => p.black === socket.id || p.white === socket.id);
+
+    socket.on("move", async(move: any) => {
+
+
         // console.log("move received:", move);
 
         // console.log(players?.chess?.history({ verbose: true }))
         try {
-            if ((players.chess.turn() === "w" && socket.id !== players?.white) ||
-                (players.chess.turn() === "b" && socket.id !== players?.black)) {
+            if ((game.chess!.turn() === "w" && socket.id !== game.players.white!) ||
+                (game.chess!.turn() === "b" && socket.id !== game.players.black)) {
                 return;
             }
             // console.log("befor result ")
-            const result = players.chess.move(move);
+            const result = game.chess!.move(move);
             // console.log("after result ", result)
             if (result) {
                 // console.log("Move made:", move);
-                currentPlayers = players.chess.turn();
-                io.to(players.white).emit("move", move)
-                io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
+                // currentPlayers = players.chess.turn();
+                io.to(game.players.white!).emit("move", move)
+                io.to(game.players.white!).emit("boardState", game.chess!.fen(), game.chess!.history({ verbose: true }));
 
-                io.to(players.black).emit("move", move)
-                io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
+                io.to(game.players.black!).emit("move", move)
+                io.to(game.players.black!).emit("boardState", game.chess!.fen(), game.chess!.history({ verbose: true }));
 
-                if (players.chess.isCheckmate() || players.chess.isCheck()) {
-                    const winner = players.chess.turn() === "w" ? "black" : "white";
+                if (game.chess!.isCheckmate() || game.chess!.isCheck()) {
+                    const findWinGame = await GameModel.findOne({
+                        $or: [
+                            { white: game.players.white! },
+                            { black: game.players.black! }
+                        ]
+                    });
+                    const winner = game.chess!.turn() === "w" ? "b" : "w";
 
                     // Send final board state before resetting
-                    const fen = players.chess.fen();
-                    const history = players.chess.history({ verbose: true });
+                    const fen = game.chess!.fen();
+                    const history = game.chess!.history({ verbose: true });
 
                     // Emit board state to both players
-                    io.to(players.white).emit("boardState", fen, history);
-                    io.to(players.black).emit("boardState", fen, history);
+                    io.to(game.players.white!).emit("boardState", fen, history);
+                    io.to(game.players.black!).emit("boardState", fen, history);
 
                     // Emit Checkmate event to both players
-                    io.to(players.white).emit("Checkmate", winner);
-                    io.to(players.black).emit("Checkmate", winner);
-
+                    io.to(game.players.white!).emit("Checkmate", winner);
+                    io.to(game.players.black!).emit("Checkmate", winner);
+                    findWinGame.status = "finished";
                     // Reset after short delay to ensure frontend receives final state
                     setTimeout(() => {
-                        players.chess.reset();
+                        game.chess!.reset();
                     }, 200);
                 }
 
-                else if (players.chess.isStalemate()) {
-                    io.to(players.white).emit("Stalemate")
-                    io.to(players.black).emit("Stalemate")
+                else if (game.chess!.isStalemate()) {
+                    const findWinGame = await GameModel.findOne({
+                        $or: [
+                            { white: game.players.white! },
+                            { black: game.players.black! }
+                        ]
+                    });
+                    io.to(game.players.white!).emit("Stalemate")
+                    io.to(game.players.black!).emit("Stalemate")
+                    findWinGame.status = "Stalemate";
                     // io.emit("Stalemate");
                     // console.log('🤝 Stalemate. Game drawn.');
-                } else if (players.chess.isDraw()) {
+                } else if (game.chess!.isDraw()) {
+                    const findWinGame = await GameModel.findOne({
+                        $or: [
+                            { white: game.players.white! },
+                            { black: game.players.black! }
+                        ]
+                    });
+                    findWinGame.status = "draw";
                     // console.log('📏 Game drawn by rule.');
-                    io.to(players.white).emit("GameIsDraw")
-                    io.to(players.black).emit("GameIsDraw")
+                    io.to(game.players.white!).emit("GameIsDraw")
+                    io.to(game.players.black!).emit("GameIsDraw")
                     // io.emit("GameIsDraw");
                 }
             }
         } catch (error) {
-            const players = Games.find(p => p.black === socket.id || p.white === socket.id);
+
             // console.log("Error in move:", error);
-            if (socket.id === players?.white) {
-                io.to(players.white).emit("Invalidmove", move);
+            if (socket.id === game.players.white!) {
+                io.to(game.players.white!).emit("Invalidmove", move);
                 console.log("Invalid move by white player:", move);
             }
-            if (socket.id === players?.black) {
-                io.to(players?.black).emit("Invalidmove", move);
+            if (socket.id === game.players.black!) {
+                io.to(game.players.black!).emit("Invalidmove", move);
                 console.log("Invalid move by black player:", socket.id);
             }
             // console.error("error happening in error part -> ", error);
@@ -222,45 +228,67 @@ if (player) { // if any players are in the game(white or black)
     });
 
     socket.on("undoMove", () => {
-        let players: any;
-        players = Games.find(p => p.black === socket.id || p.white === socket.id);
-        if ((players.chess.turn() === "w" && socket.id !== players?.white) ||
-            (players.chess.turn() === "b" && socket.id !== players?.black)) {
+        if ((game.chess!.turn() === "w" && socket.id !== game.players.white!) ||
+            (game.chess!.turn() === "b" && socket.id !== game.players.black!)) {
             return;
         }
-        if (players) {
-            players.chess.undo();
-            io.to(players.white).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
-            io.to(players.black).emit("boardState", players.chess.fen(), players.chess.history({ verbose: true }));
-        }
+
+        game.chess!.undo();
+        io.to(game.players.white!).emit("boardState", game.chess!.fen(), game.chess!.history({ verbose: true }));
+        io.to(game.players.black!).emit("boardState", game.chess!.fen(), game.chess!.history({ verbose: true }));
+
     });
 
     // after game complitation (like - any user gone, win, other case )
-    socket.on("reConnect", () => {
+    socket.on("reConnect", async () => {
+        const existingGame = await GameModel.findOne({ // find a game that is waiting for players (not it self)
+            status: "waiting",
+            white: { $ne: socket.id },
+            black: { $ne: socket.id },
+        });
+        console.log("reConnect called for socket:", socket.id, existingGame);
+        if (!existingGame) { // not found any game except it self
+            // const findGame = await GameModel.findOne({ // find a game where the user is already a player
+            //     $or: [
+            //         { white: socket.id },
+            //         { black: socket.id }
+            //     ]
+            // });
+            // if (!findGame) {
 
-        if (!pendingUser) {
-            pendingUser = socket.id
-            socket.emit("playersRole", "w");
-
-        } else {
-            const players = new PlayersClass(pendingUser, socket.id);
-            pendingUser = null;
-            Games.push(players);
-            // console.log("New game created with players, games status", Games);
-            // console.log("Games array ",Games)
-            socket.emit("playersRole", "b");
-            // Games.push(players)
-            if (players.white && players.black) {
-                // console.log("here")
-                io.to(players.black).emit("startGame");
-                io.to(players.white).emit("startGame");
-                // io.to(players.black).emit("printGames", Games);
-                // io.to(players.white).emit("printGames", Games);
-            }
-            // console.log("sending black role to player ", socket.id);
+            //     const newGame = await GameModel.create({ white: socket.id });
+            //     game.chess = new Chess();
+            //     game.players.white = socket.id;
+            //     socket.emit("playersRole", "w");
+            //     console.log("White joined:", socket.id);
             // }
+        } else {
+            // find a game where the user is not already a player
+             await GameModel.findOneAndDelete({
+                $or: [
+                    { white: socket.id },
+                    { black: socket.id }
+                ]
+            });
+            if (existingGame.black) {
+                existingGame.white = socket.id;
+                game.players.white = socket.id;
+                game.players.black = existingGame.black;
+                socket.emit("playersRole", "w");
+            } else {
+                existingGame.black = socket.id;
+                game.players.black = socket.id;
+                game.players.white = existingGame.white;
+                socket.emit("playersRole", "b");
+                console.log("Black joined:", socket.id);
+            }
+            game.chess = new Chess();
+            existingGame.status = "ongoing";
+            await existingGame.save();
+            io.to(game.players.white!).emit("startGame");
+            io.to(game.players.black!).emit("startGame");
         }
-    })
+    });
 
 });
 server.listen(9000, () => {
