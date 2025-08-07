@@ -41,7 +41,6 @@ let game = {
 io.on("connection", async (socket: Socket) => {
     await GameModel.deleteMany({
         white: "",
-        black: ""
     });
 
     // await GameModel.deleteAll(); // Clear all games at the start of a new connection
@@ -295,6 +294,13 @@ io.on("connection", async (socket: Socket) => {
         }
     });
 
+});
+
+// ✅ Add this AFTER all API and socket setup
+app.use(express.static(path.join(__dirname, "client", "dist")));
+
+app.get("*", (req:any, res:any) => {
+  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
 server.listen(9000, () => {
     console.log("Listening on port 9000");
