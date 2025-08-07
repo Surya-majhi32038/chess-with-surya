@@ -29,7 +29,7 @@ app.get('/', (req: any, res: any) => {
     res.send({
         activeStatus: true,
         error: false
-    }); 
+    });
 });
 
 
@@ -39,6 +39,11 @@ let game = {
 };
 
 io.on("connection", async (socket: Socket) => {
+    await GameModel.deleteMany({
+        white: "",
+        black: ""
+    });
+
     // await GameModel.deleteAll(); // Clear all games at the start of a new connection
     console.log("Player connected:", socket.id);
 
@@ -56,7 +61,7 @@ io.on("connection", async (socket: Socket) => {
             existingGame.white = socket.id;
             game.players.white = socket.id;
             socket.emit("playersRole", "w");
-        } else if(existingGame.white && !existingGame.black) {
+        } else if (existingGame.white && !existingGame.black) {
             existingGame.black = socket.id;
             game.players.black = socket.id;
             socket.emit("playersRole", "b");
@@ -136,7 +141,7 @@ io.on("connection", async (socket: Socket) => {
     );
 
 
-    socket.on("move", async(move: any) => {
+    socket.on("move", async (move: any) => {
 
 
         // console.log("move received:", move);
@@ -264,7 +269,7 @@ io.on("connection", async (socket: Socket) => {
             // }
         } else {
             // find a game where the user is not already a player
-             await GameModel.findOneAndDelete({
+            await GameModel.findOneAndDelete({
                 $or: [
                     { white: socket.id },
                     { black: socket.id }

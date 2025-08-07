@@ -92,7 +92,7 @@ const ChessBoard = () => {
       chess.load(fen);
       setBoard([...chess.board()]);
     });
-    socket?.on("move", (move: { from: Square; to: Square }) => {
+    socket.on("move", (move: { from: Square; to: Square }) => {
       const change = chess.move(move);
         if (!change) {
             console.error("Invalid move:", move);
