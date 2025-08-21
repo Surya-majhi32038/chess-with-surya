@@ -11,7 +11,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ start,onTimeUp }) => {
   const [blinking, setBlinking] = useState(false);
   useEffect(() => {
     if (start) {
-      setSeconds(6000000); // Reset the timer on every start signal
+      setSeconds(60); // Reset the timer on every start signal
     }
   }, [start]);
 

@@ -39,9 +39,14 @@ let game = {
 };
 
 io.on("connection", async (socket: Socket) => {
-    await GameModel.deleteMany({
-        white: "",
-    });
+  await GameModel.deleteMany({
+  white: "",
+  $or: [
+    { black: { $exists: false } },
+    { black: null }
+  ]
+});
+
 
     // await GameModel.deleteAll(); // Clear all games at the start of a new connection
     console.log("Player connected:", socket.id);

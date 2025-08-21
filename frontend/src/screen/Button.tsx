@@ -1,6 +1,7 @@
 
 
 const Button = ({ onClick ,children } : { onClick: ()=>void, children : React.ReactNode}) => {
+    console.log(typeof onClick, children);
   return (
     <button
         onClick={onClick} 

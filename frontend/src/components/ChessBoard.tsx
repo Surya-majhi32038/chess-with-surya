@@ -113,7 +113,7 @@ const ChessBoard = () => {
       setshowConnecting(false);
       setshowConnecting(!showConnecting);
       console.log("startGame playerRoleRef.currentRef.current", playerRoleRef.current);
-      // console.log(showConnecting);
+      
       setShowModal(true);
       seth1Tag("WELCOME TO OUR GAME");
       setp1(`You are :${playerRoleRef.current == "w" ? "WHITE" : "BLACK"}`);
