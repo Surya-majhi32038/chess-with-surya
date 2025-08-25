@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
         screens: {
-            md: '401px', // Change `md` to start at 850px instead of 768px
-            ph: { max: '400px' }, // Custom media query for phone screens
+            md: '430px', // Change `md` to start at 850px instead of 768px
+            ph: { max: '429px' }, // Custom media query for phone screens
         },
     },
   plugins: [],

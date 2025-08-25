@@ -2,7 +2,7 @@ export const Header = () => {
     return (
         <>
             {/* main div  */}
-            <div className="bg-[#262522]  w-36 h-screen  flex flex-col text-gray-300 font-bold text-base">
+            <div className="bg-[#262522]  w-36 h-[94vh]  flex flex-col text-gray-300 font-bold text-base">
                 {/* every thing div */}
                 <div className="bg-transparent w-full ph:hidden cursor-pointer hover:bg-[#21201E] py-2.5 flex justify-center">
                     <img
